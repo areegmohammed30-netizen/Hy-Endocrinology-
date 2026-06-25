@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 3 — High-Yield Endocrine Qbank (Challenge)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --ink:#1b2733; --muted:#5b6b7a; --line:#d9e1e8; --bg:#eef2f5; --panel:#fff;
+  --blue:#1d6fb8; --blue-d:#15598f; --green:#1f8a4c; --green-bg:#e7f6ec;
+  --red:#c0392b; --red-bg:#fdecea; --amber:#e0a106; --pearl-bg:#fff8e6; --pearl-line:#f0d27a;
+  --hl:#fff27a; --shadow:0 1px 3px rgba(20,40,60,.12);
+}
+body{ font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif; color:var(--ink);
+  background:var(--bg); font-size:15px; line-height:1.55; }
+
+/* UWorld-style secondary item bar (sits under the dark top bar) */
+.itembar{ background:var(--blue-d); border-bottom:1px solid var(--blue-d); padding:9px 16px; display:flex; align-items:center; gap:16px; font-size:13px; color:#eaf2fa; flex-wrap:wrap; }
+.itembar .seg{ display:flex; align-items:center; gap:6px; color:#eaf2fa; }
+.itembar .seg b{ color:#fff; font-weight:700; }
+.itembar .dot{ width:6px; height:6px; border-radius:50%; background:#7fa8cc; }
+.itembar .spacer{ margin-left:auto; }
+.itembar #itemStatus{ font-weight:600; color:#fff; }
+.itembar #itemScore{ font-weight:700; color:#fff; }
+
+/* top bar */
+.topbar{ display:flex; align-items:center; gap:14px; background:var(--ink); color:#fff; padding:8px 16px; flex-wrap:wrap; }
+.topbar .brand{ font-weight:700; letter-spacing:.3px; }
+.topbar .brand span{ color:#7fc1ef; }
+.topbar .qid{ font-size:12px; color:#a9bccb; }
+.tools{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.jump{ display:flex; align-items:center; gap:5px; background:#2c3b4a; border:1px solid #3d4e60; border-radius:5px; padding:3px 6px 3px 10px; }
+.jump label{ font-size:12px; color:#a9bccb; }
+.jump select{ background:#1b2733; color:#fff; border:1px solid #3d4e60; border-radius:4px; padding:5px 6px; font-size:12.5px; cursor:pointer; }
+.tbtn{ background:#2c3b4a; color:#dfe8ef; border:1px solid #3d4e60; border-radius:5px; padding:6px 10px; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:5px; }
+.tbtn:hover{ background:#374a5c; }
+.tbtn.on{ background:var(--blue); border-color:var(--blue); color:#fff; }
+.tbtn.mark.on{ background:var(--amber); border-color:var(--amber); color:#3a2c00; }
+
+/* layout */
+.wrap{ display:flex; max-width:1180px; margin:0 auto; }
+.nav{ width:108px; background:var(--panel); border-right:1px solid var(--line); padding:10px 8px; min-height:calc(100vh - 86px); }
+.nav h4{ font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:4px 4px 8px; }
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.qcell{ position:relative; border:1px solid var(--line); background:#fff; border-radius:5px; padding:8px 0; text-align:center; font-size:13px; cursor:pointer; font-weight:600; color:var(--muted); }
+.qcell:hover{ border-color:var(--blue); }
+.qcell.cur{ outline:2px solid var(--blue); outline-offset:-2px; color:var(--blue); }
+.qcell.seen{ background:var(--green-bg); color:var(--green); border-color:#b5e3c6; }
+.qcell .flag{ position:absolute; top:-4px; right:-4px; color:var(--amber); font-size:11px; }
+.main{ flex:1; min-width:0; padding:22px 26px 60px; }
+.progress{ font-size:12.5px; color:var(--muted); margin-bottom:14px; display:flex; gap:18px; flex-wrap:wrap; }
+.progress b{ color:var(--ink); }
+
+/* highlighter toolbar */
+.hlbar{ display:none; align-items:center; gap:8px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-bottom:14px; box-shadow:var(--shadow); flex-wrap:wrap; }
+.hlbar.show{ display:flex; }
+.hlbar .hlab{ font-size:12.5px; color:var(--muted); font-weight:600; }
+.hlswatch{ width:24px; height:24px; border-radius:6px; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
+.hlswatch.on{ box-shadow:0 0 0 2px var(--ink); }
+.hlmode{ border:1px solid var(--line); background:#fff; border-radius:6px; padding:6px 11px; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:5px; }
+.hlmode.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.hlmode.hlgo{ background:var(--blue); color:#fff; border-color:var(--blue); font-weight:700; }
+.hlhint{ display:none; font-size:12px; color:var(--muted); margin:-6px 0 14px; padding:0 2px; }
+.hlhint.show{ display:block; }
+.hl-active ::selection{ background:var(--hlcur,#fff27a); }
+mark.uhl{ padding:0 1px; border-radius:2px; cursor:inherit; }
+
+/* concept = question screen */
+.concept{ display:none; background:#fbfcfd; border:1px solid var(--line); border-radius:8px; padding:28px 34px; box-shadow:var(--shadow); max-width:820px; }
+.concept.active{ display:block; }
+.concept-head{ display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.concept-qlabel{ font-size:.8em; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.concept-number{ background:var(--blue); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.82em; flex-shrink:0; }
+.vignette{ background:transparent; padding:0; border:none; margin-bottom:22px; line-height:1.85; font-size:1.02em; color:#1f2d3a; }
+.vignette{ font-family:Georgia,'Times New Roman',serif; }
+.question{ color:var(--ink); font-weight:700; margin:18px 0 14px; font-size:1.06em; font-family:Georgia,'Times New Roman',serif; }
+
+/* NBME/UWorld multiple-choice options */
+.options{ margin:6px 0 8px; }
+.opt{ display:flex; gap:13px; align-items:flex-start; border:1px solid #e4ebf0; background:#fff; border-radius:6px; padding:13px 15px; margin-bottom:8px; cursor:pointer; transition:background .1s,border-color .1s; }
+.opt:hover{ border-color:var(--blue); background:#f3f9ff; }
+.opt .key{ flex:none; width:26px; height:26px; border-radius:50%; border:1.5px solid #c2ced8; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:var(--muted); background:#fff; }
+.opt > div:last-child{ padding-top:2px; line-height:1.5; }
+.opt.sel{ border-color:var(--blue); background:#eef6fd; box-shadow:inset 3px 0 0 var(--blue); } .opt.sel .key{ border-color:var(--blue); color:var(--blue); }
+.opt.correct{ border-color:var(--green); background:var(--green-bg); box-shadow:inset 3px 0 0 var(--green); } .opt.correct .key{ background:var(--green); border-color:var(--green); color:#fff; }
+.opt.wrong{ border-color:var(--red); background:var(--red-bg); box-shadow:inset 3px 0 0 var(--red); } .opt.wrong .key{ background:var(--red); border-color:var(--red); color:#fff; }
+.opt.locked{ cursor:default; }
+.opt.locked:hover{ background:inherit; }
+.submit-row{ display:flex; gap:10px; align-items:center; margin:14px 0 4px; flex-wrap:wrap; }
+.submit-btn{ background:var(--blue); color:#fff; border:none; border-radius:5px; padding:10px 26px; font-size:14px; font-weight:700; cursor:pointer; letter-spacing:.02em; }
+.submit-btn:hover{ background:var(--blue-d); } .submit-btn:disabled{ background:#9db8cc; cursor:not-allowed; }
+.qreset-btn{ background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:5px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+.qreset-btn:hover{ border-color:var(--blue); color:var(--blue); }
+.wb-which{ font-size:12px; color:var(--muted); font-weight:500; margin-left:8px; }
+
+/* explanation panel — UWorld feedback bar + paneled body */
+.exhead{ background:var(--green-bg); color:var(--green); font-weight:700; padding:13px 18px; border-left:5px solid var(--green); font-size:1.02em; }
+.exhead.wrongh{ background:var(--red-bg); color:var(--red); border-left-color:var(--red); }
+.exrows{ padding:4px 2px 6px; }
+.exrow{ display:flex; gap:11px; padding:11px 16px; border-top:1px solid #eef2f5; font-size:.98em; line-height:1.6; }
+.exrow .lab{ flex:none; font-weight:700; width:22px; } .exrow.r .lab{ color:var(--green); } .exrow.w .lab{ color:var(--red); }
+.exrow.r{ background:#f4fbf6; } 
+.exsub{ font-size:.78em; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:14px 16px 5px; color:var(--muted); }
+.exsub.r{ color:var(--green); } .exsub.w{ color:var(--red); border-top:1px solid var(--line); margin-top:6px; }
+
+.reveal-btn{ background:var(--blue); color:#fff; border:none; padding:11px 26px; border-radius:6px; cursor:pointer; font-size:1em; font-weight:700; transition:background .15s; margin-bottom:8px; }
+.reveal-btn:hover{ background:var(--blue-d); }
+
+.answer{ display:none; margin-top:14px; padding:0; background:#fff; border:1px solid var(--line); border-radius:9px; overflow:hidden; box-shadow:var(--shadow); }
+.answer-label{ background:var(--green-bg); color:var(--green); font-weight:700; font-size:1.05em; display:block; padding:12px 16px; }
+.answer > *:not(.answer-label){ margin-left:16px; margin-right:16px; }
+.answer > *:last-child{ margin-bottom:16px; }
+
+.teaching-point{ background:#e7eefb; padding:15px; border-radius:8px; margin:15px; border-left:4px solid var(--blue); }
+.teaching-point-title{ color:var(--blue-d); font-weight:bold; margin-bottom:10px; }
+.table-container{ overflow-x:auto; margin:15px; }
+table{ width:100%; border-collapse:collapse; background:#fff; border-radius:6px; overflow:hidden; }
+th{ background:var(--blue); color:#fff; padding:12px; text-align:left; font-weight:600; }
+td{ padding:12px; border-bottom:1px solid #e9ecef; }
+tr:last-child td{ border-bottom:none; }
+tr:nth-child(even){ background:#f8f9fa; }
+.danger-box{ background:var(--red-bg); padding:15px; border-radius:8px; margin:15px; border-left:4px solid var(--red); }
+.danger-box-title{ font-weight:bold; color:#721c24; margin-bottom:8px; }
+.mnemonic{ background:#e0f2fe; padding:15px; border-radius:8px; margin:15px; font-family:'Courier New',monospace; border-left:4px solid #0284c7; }
+.pearl{ background:var(--pearl-bg); border:1px solid var(--pearl-line); border-radius:8px; padding:12px 14px; margin:15px; }
+.pearl strong{ color:#9a6b00; }
+ul,ol{ margin:10px 0 10px 20px; line-height:1.8; } li{ margin:5px 0; }
+strong{ color:var(--blue-d); }
+
+/* footer nav */
+.footnav{ display:flex; justify-content:space-between; align-items:center; margin-top:22px; border-top:1px solid var(--line); padding-top:14px; }
+.btn{ border:none; border-radius:6px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; }
+.btn-ghost{ background:#fff; border:1px solid var(--line); color:var(--ink); } .btn-ghost:hover{ border-color:var(--blue); }
+.btn-ghost:disabled{ opacity:.45; cursor:not-allowed; }
+
+/* notes (per concept) — Qbank styling */
+.tools-row{ display:flex; margin-top:16px; }
+.note-btn{ background:none; border:1.5px solid #bbb; color:#888; padding:5px 12px; border-radius:20px; cursor:pointer; font-size:.82em; font-weight:600; margin-left:auto; transition:all .15s; }
+.note-btn:hover{ border-color:var(--blue); color:var(--blue); }
+.note-btn.has-note{ border-color:var(--amber); color:#d97706; background:#fffbeb; }
+.note-area{ display:none; margin-top:14px; }
+.note-area.open{ display:block; }
+.note-area textarea{ width:100%; min-height:90px; padding:10px 12px; border:1.5px solid #e2b94a; border-radius:8px; font-family:inherit; font-size:.95em; line-height:1.6; resize:vertical; background:#fffdf0; color:#444; }
+.note-area textarea:focus{ outline:none; border-color:#d97706; }
+.note-saved{ font-size:.75em; color:#aaa; text-align:right; margin-top:3px; height:14px; }
+
+/* whiteboard (per concept) — rendered ABOVE the answer so it is usable before revealing */
+.whiteboard{ margin:18px 0; border:2px solid #bfdbfe; border-radius:10px; overflow:hidden; background:#f0f9ff; }
+.wb-header{ background:var(--blue); color:#fff; font-size:.88em; font-weight:700; padding:8px 14px; }
+.wb-toolbar{ display:flex; align-items:center; gap:6px; padding:8px 12px; background:#dbeafe; flex-wrap:wrap; border-bottom:1px solid #bfdbfe; }
+.wb-btn{ background:#fff; border:1.5px solid #93c5fd; color:var(--blue); padding:4px 11px; border-radius:14px; cursor:pointer; font-size:.8em; font-weight:700; user-select:none; }
+.wb-btn:hover{ background:#eff6ff; }
+.wb-btn.active{ background:var(--blue); color:#fff; border-color:var(--blue); }
+.wb-colors{ display:flex; gap:5px; align-items:center; }
+.wb-color{ width:20px; height:20px; border-radius:50%; cursor:pointer; border:2px solid transparent; flex-shrink:0; }
+.wb-color.active{ border-color:#1e3a5f; transform:scale(1.15); }
+.wb-sep{ width:1px; height:20px; background:#93c5fd; flex-shrink:0; }
+.wb-sizes{ display:flex; gap:4px; }
+.wb-sz{ background:#fff; border:1.5px solid #93c5fd; color:var(--blue); border-radius:12px; cursor:pointer; font-weight:700; padding:3px 8px; font-size:.78em; user-select:none; }
+.wb-sz.active{ background:var(--blue); color:#fff; border-color:var(--blue); }
+.wb-canvas{ display:block; width:100%; height:320px; cursor:crosshair; background:#fff; touch-action:none; }
+.wb-hint{ font-size:.72em; color:#60a5fa; text-align:right; padding:3px 12px 6px; background:#f0f9ff; }
+/* whiteboard zoom: canvas is CSS-scaled inside a scroll/pan wrapper; bitmap is untouched */
+.wb-canvas-wrap{ overflow:auto; max-height:340px; background:#fff; }
+.wb-canvas-wrap .wb-canvas{ height:340px; }
+.wb-btn:disabled{ opacity:.4; cursor:not-allowed; }
+.wb-zoom-label{ font-size:.8em; font-weight:700; color:var(--blue); min-width:42px; text-align:center; display:inline-block; }
+/* UWorld-style big item number at the top of the left rail */
+.railitem{ text-align:center; padding:10px 6px 12px; margin:-2px -2px 10px; border-bottom:1px solid var(--line); }
+.railitem-num{ font-size:34px; font-weight:800; line-height:1; color:var(--blue-d); }
+.railitem-of{ font-size:11px; color:var(--muted); margin-top:2px; letter-spacing:.04em; }
+.railitem-status{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-top:7px; color:var(--muted); }
+.railitem-status.correct{ color:var(--green); } .railitem-status.incorrect{ color:var(--red); } .railitem-status.marked{ color:var(--amber); }
+/* original schematic figures inside explanations (no inline style \u2014 satisfies CSS-lock audit) */
+.infographic-svg{ width:100%; max-width:520px; display:block; margin:6px auto; }
+.ig-note{ font-size:.85em; margin-top:6px; } .ig-note-red{ color:#721c24; } .ig-note-blue{ color:#15598f; }
+
+/* flashcard modal + whiteboard modal share .modal */
+.modal{ position:fixed; inset:0; background:rgba(15,25,35,.5); display:none; align-items:center; justify-content:center; z-index:50; }
+.modal.show{ display:flex; }
+.sheet{ background:#fff; border-radius:12px; width:min(680px,94vw); max-height:90vh; overflow:auto; box-shadow:0 20px 50px rgba(0,0,0,.3); }
+.sheet-head{ display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); font-weight:700; }
+.sheet-head .x{ margin-left:auto; cursor:pointer; color:var(--muted); font-size:20px; line-height:1; border:none; background:none; }
+.sheet-body{ padding:16px; }
+.fc{ perspective:1200px; margin:0 auto 14px; max-width:460px; }
+.fc-inner{ position:relative; height:230px; transition:transform .5s; transform-style:preserve-3d; cursor:pointer; }
+.fc.flip .fc-inner{ transform:rotateY(180deg); }
+.fc-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; display:flex; align-items:center; justify-content:center; text-align:center; padding:26px; border:1px solid var(--line); }
+.fc-front{ background:linear-gradient(160deg,#1d6fb8,#15598f); color:#fff; font-size:19px; font-weight:700; }
+.fc-back{ background:#fff; transform:rotateY(180deg); font-size:15px; color:var(--ink); }
+.fc-meta{ text-align:center; color:var(--muted); font-size:13px; margin-bottom:10px; }
+.fc-nav{ display:flex; justify-content:center; gap:10px; margin-top:6px; flex-wrap:wrap; }
+.fc-tools{ display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+.fc-editor{ display:none; margin-top:14px; border-top:1px solid var(--line); padding-top:14px; }
+.fc-editor.show{ display:block; }
+.fc-editor input,.fc-editor textarea{ width:100%; border:1.5px solid var(--line); border-radius:8px; padding:9px 11px; font-family:inherit; font-size:.95em; margin-bottom:8px; }
+.fc-editor textarea{ min-height:70px; resize:vertical; }
+.fc-tag{ font-size:11px; color:var(--muted); margin-top:6px; }
+.fc-custom-badge{ display:inline-block; background:var(--amber); color:#3a2c00; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; margin-left:6px; }
+
+/* header controls (kept from original for export/clear) */
+.header-controls{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+.ctl-btn,.clear-btn{ background:var(--blue); border:none; color:#fff; padding:6px 16px; border-radius:20px; cursor:pointer; font-size:.82em; font-weight:600; }
+.ctl-btn:hover,.clear-btn:hover{ background:var(--blue-d); }
+.note-count{ font-size:.82em; color:#fff; padding:6px 0; display:flex; align-items:center; }
+.snapshot-banner{ display:none; background:#fff3cd; color:#7a5d00; text-align:center; padding:8px; font-size:.85em; }
+
+@media (max-width:760px){
+  .wrap{ flex-direction:column; }
+  .nav{ width:100%; min-height:auto; border-right:none; border-bottom:1px solid var(--line); }
+  .grid{ grid-template-columns:repeat(8,1fr); }
+  .main{ padding:16px; }
+  .wb-toolbar{ gap:4px; padding:6px 8px; }
+  .wb-btn,.wb-sz{ padding:3px 7px; font-size:.75em; }
+}
+/* Font scaler (toggled on <body> by JS) */
+body.fz-1{ font-size:13px; }
+body.fz0{ font-size:15px; }
+body.fz1{ font-size:17px; }
+body.fz2{ font-size:19px; }
+body.fz3{ font-size:21px; }
+.fontctl{ display:flex; align-items:center; gap:0; }
+.fontctl .tbtn{ border-radius:0; }
+.fontctl .tbtn:first-child{ border-top-left-radius:5px; border-bottom-left-radius:5px; }
+.fontctl .tbtn:last-child{ border-top-right-radius:5px; border-bottom-right-radius:5px; border-left:none; }
+.fontctl .fzlabel{ background:#1b2733; color:#a9bccb; border:1px solid #3d4e60; border-left:none; border-right:none; padding:6px 8px; font-size:12px; min-width:34px; text-align:center; }
+
+</style>
+</head>
+<body>
+<div class="snapshot-banner" id="snapshotBanner">&#128194; Annotated snapshot &mdash; edits stay in this file. Re-export to save further changes.</div>
+<div class="topbar">
+  <div class="brand">Step 3 <span>Endocrine</span> Qbank</div>
+  <div class="qid" id="qid">QID 1</div>
+  <div class="tools">
+    <div class="jump"><label for="jumpSel">Go to</label><select id="jumpSel"></select></div>
+    <div class="fontctl" role="group" aria-label="Text size">
+      <button class="tbtn" id="fzDown" title="Decrease text size">A−</button>
+      <span class="fzlabel" id="fzLabel">A</span>
+      <button class="tbtn" id="fzUp" title="Increase text size">A+</button>
+    </div>
+    <button class="tbtn" id="hlBtn">🖍️ Highlight</button>
+    <button class="tbtn mark" id="markBtn">🚩 Mark</button>
+    <button class="tbtn" id="wbBtn">📝 Whiteboard</button>
+    <button class="tbtn" id="fcBtn">🃏 Flashcards</button>
+    <span class="note-count" id="noteCount">📝 0 notes</span>
+    <button class="ctl-btn" id="exportBtn">⬇ Export</button>
+    <button class="ctl-btn" id="clearBtn">Clear all</button>
+  </div>
+</div>
+
+<div class="itembar">
+  <div class="seg">Item <b id="itemNum">1</b> of <b id="itemTotal">20</b></div>
+  <div class="dot"></div>
+  <div class="seg"><b id="examLabel">Step 3 Endocrine Review</b></div>
+  <div class="dot"></div>
+  <div class="seg" id="itemStatus">Unanswered</div>
+  <div class="spacer"></div>
+  <div class="seg" id="itemScore"></div>
+</div>
+
+<div class="wrap">
+  <aside class="nav">
+    <div class="railitem"><div class="railitem-num" id="railNum">1</div><div class="railitem-of">of 20</div><div class="railitem-status" id="railStatus">Unanswered</div></div>
+    <h4>Jump to question</h4><div class="grid" id="navGrid"></div></aside>
+  <main class="main">
+    <div class="hlbar" id="hlbar">
+      <span class="hlab">Highlighter:</span>
+      <span class="hlswatch on" data-color="#fff27a" style="background:#fff27a"></span>
+      <span class="hlswatch" data-color="#a8e6a3" style="background:#a8e6a3"></span>
+      <span class="hlswatch" data-color="#9fd4ff" style="background:#9fd4ff"></span>
+      <span class="hlswatch" data-color="#ffb3c1" style="background:#ffb3c1"></span>
+      <span class="hlswatch" data-color="#e0b3ff" style="background:#e0b3ff"></span>
+      <button class="hlmode hlgo" id="hlGoBtn">🖍️ Highlight selection</button>
+      <button class="hlmode" id="hlEraseBtn">🧽 Eraser</button>
+      <button class="hlmode" id="hlClearBtn">Clear all</button>
+    </div>
+    <div class="hlhint" id="hlhint">Select text (drag on desktop, or with your finger on touch), then tap “Highlight selection.”</div>
+    <div class="progress" id="progress"></div>
+
+<div class="concept active" id="screen-c1" data-correct="1"
+     data-fc-front="Fatigue and a Lipid Abnormality" data-fc-back="Answer: Elevated TSH with low free T4">
+  <div class="vignette">A 54-year-old woman is evaluated for 4 months of fatigue, mild weight gain, and constipation. She attributes her symptoms to a new desk job. Examination shows a heart rate of 58/min and slightly coarse, dry skin; the relaxation phase of her ankle reflexes is prolonged. A lipid panel obtained for cardiovascular screening shows an LDL cholesterol of 188 mg/dL, up from 122 mg/dL two years ago. She takes no medications. Serum creatine kinase is mildly elevated.</div>
+  <div class="question">❓ Which of the following laboratory patterns would best explain both her symptoms and the change in her lipid panel?</div>
+  <div class="options" id="opts-c1">
+<div class="opt" data-cid="c1" data-idx="0"><div class="key">A</div><div>Elevated TSH with elevated free T4</div></div>
+<div class="opt" data-cid="c1" data-idx="1"><div class="key">B</div><div>Elevated TSH with low free T4</div></div>
+<div class="opt" data-cid="c1" data-idx="2"><div class="key">C</div><div>Normal TSH with low total T4 and normal free T4</div></div>
+<div class="opt" data-cid="c1" data-idx="3"><div class="key">D</div><div>Suppressed TSH with elevated free T4</div></div>
+<div class="opt" data-cid="c1" data-idx="4"><div class="key">E</div><div>Low TSH with low free T4</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c1" data-cid="c1" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c1">↺ Reset</button>
+  </div>
+  <div id="c1" class="answer">
+    <div class="exhead" id="exhead-c1"></div>
+    <div class="exrows" id="exrows-c1">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>High TSH with high free T4 suggests a TSH-secreting adenoma or assay interference—rare and not fitting this hypothyroid clinical picture.</div></div>
+<div class="exrow r" data-idx="1"><div class="lab">B</div><div>Correct. Hypothyroidism reduces LDL-receptor expression and lipoprotein clearance, so new or worsening hypercholesterolemia (and a mildly elevated CK from myopathy) is a classic secondary cause—here unifying her fatigue, bradycardia, delayed reflex relaxation, and rising LDL. Primary hypothyroidism is defined biochemically by a HIGH TSH with a LOW free T4. Treating with levothyroxine typically improves the lipid profile.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>A low total T4 with normal free T4 and normal TSH reflects a thyroxine-binding globulin change (e.g., estrogen), not true hypothyroidism, and would not cause these symptoms or LDL rise.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Suppressed TSH with high free T4 is hyperthyroidism, which lowers (not raises) cholesterol and causes weight loss and tachycardia—opposite to this patient.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Low TSH with low free T4 indicates central hypothyroidism; while it could cause hypothyroid symptoms, it is far less common and is not the best single explanation without pituitary clues.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Confirming, treating, and special situations</div><div>Primary hypothyroidism is confirmed by a high TSH with low free T4; the most common cause in iodine-sufficient areas is Hashimoto thyroiditis (positive anti-TPO antibodies). Treat with levothyroxine and recheck TSH every 6–8 weeks, titrating to a goal TSH of roughly 0.5–5.0. Two high-yield wrinkles: in <strong>pregnancy</strong>, increased thyroxine-binding globulin raises levothyroxine requirements—increase the dose once pregnancy is confirmed; and <strong>subclinical</strong> hypothyroidism (high TSH, normal T4) is generally treated when TSH is >10 or the patient is symptomatic/pregnant.</div></div>
+    <svg class="infographic-svg" viewBox="0 0 520 185" role="img" aria-label="Thyroid function interpretation">
+  <rect x="0" y="0" width="520" height="185" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">Reading TSH + Free T4</text>
+  <rect x="20" y="34" width="232" height="58" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="32" y="54" font-size="11" font-weight="bold" fill="#c0392b">High TSH + Low T4</text>
+  <text x="32" y="72" font-size="10" fill="#1f2d3a">Primary hypothyroidism</text>
+  <text x="32" y="86" font-size="9.5" fill="#5b6b7a">Gland fails → pituitary drives TSH up</text>
+  <rect x="268" y="34" width="232" height="58" rx="6" fill="#e7f6ec" stroke="#1f8a4c"/>
+  <text x="280" y="54" font-size="11" font-weight="bold" fill="#1f8a4c">Low TSH + High T4</text>
+  <text x="280" y="72" font-size="10" fill="#1f2d3a">Hyperthyroidism (e.g., Graves)</text>
+  <text x="280" y="86" font-size="9.5" fill="#5b6b7a">Excess hormone suppresses TSH</text>
+  <rect x="20" y="98" width="232" height="58" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="32" y="118" font-size="11" font-weight="bold" fill="#15598f">Low/normal TSH + Low T4</text>
+  <text x="32" y="136" font-size="10" fill="#1f2d3a">Central hypothyroidism</text>
+  <text x="32" y="150" font-size="9.5" fill="#5b6b7a">Pituitary/hypothalamic failure</text>
+  <rect x="268" y="98" width="232" height="58" rx="6" fill="#fdf0d5" stroke="#d9920a"/>
+  <text x="280" y="118" font-size="11" font-weight="bold" fill="#b9760a">High TSH + Normal T4</text>
+  <text x="280" y="136" font-size="10" fill="#1f2d3a">Subclinical hypothyroidism</text>
+  <text x="280" y="150" font-size="9.5" fill="#5b6b7a">Treat if symptomatic or TSH &gt;10</text>
+</svg>
+    <div class="ig-note ig-note-blue">TSH is the single best screening test: a HIGH TSH localizes the problem to the gland itself (primary), while a LOW/normal TSH with low T4 points to the pituitary (central).</div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Unexplained or worsening hypercholesterolemia (± elevated CK) is a classic clue to hypothyroidism—check a TSH. Primary hypothyroidism = HIGH TSH + LOW free T4; treating it improves the lipid panel. Always consider secondary causes before escalating statin therapy.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c1" data-cid="c1">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c1">
+      <textarea id="note-ta-c1" data-cid="c1" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c1"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c2" data-correct="4"
+     data-fc-front="Thyrotoxicosis With an Uptake Result [Case 1 of 2]" data-fc-back="Answer: Autoantibodies that stimulate the TSH receptor">
+  <div class="vignette">A 24-year-old woman has 3 months of palpitations, a 5-kg unintentional weight loss, and irritability. Heart rate is 112/min and irregular at times; she has a fine tremor and warm, moist skin, and a symmetrically enlarged thyroid without tenderness. TSH is undetectable and free T4 is elevated. A radioactive iodine uptake scan shows diffusely INCREASED uptake. Her eyes show mild proptosis on exophthalmometry.
+
+This is the first of two linked questions about the same patient.</div>
+  <div class="question">❓ Which of the following best explains the increased radioiodine uptake in this patient?</div>
+  <div class="options" id="opts-c2">
+<div class="opt" data-cid="c2" data-idx="0"><div class="key">A</div><div>Autonomous hormone production from a single nodule</div></div>
+<div class="opt" data-cid="c2" data-idx="1"><div class="key">B</div><div>Ingestion of exogenous thyroid hormone</div></div>
+<div class="opt" data-cid="c2" data-idx="2"><div class="key">C</div><div>Leakage of preformed hormone from inflamed follicles</div></div>
+<div class="opt" data-cid="c2" data-idx="3"><div class="key">D</div><div>Iodine-induced hormone synthesis from a recent contrast load</div></div>
+<div class="opt" data-cid="c2" data-idx="4"><div class="key">E</div><div>Autoantibodies that stimulate the TSH receptor</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c2" data-cid="c2" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c2">↺ Reset</button>
+  </div>
+  <div id="c2" class="answer">
+    <div class="exhead" id="exhead-c2"></div>
+    <div class="exrows" id="exrows-c2">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>A single autonomous nodule would show focal increased uptake with suppression of the rest of the gland, not diffuse uptake, and would not cause orbitopathy.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Exogenous hormone suppresses TSH and the gland, giving LOW uptake (and low thyroglobulin).</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Leakage from inflamed follicles (thyroiditis) releases stored hormone WITHOUT new synthesis, so uptake is LOW, not increased.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Iodine-induced thyrotoxicosis (Jod-Basedow) typically shows low uptake because the gland is already iodine-loaded.</div></div>
+<div class="exrow r" data-idx="4"><div class="lab">E</div><div>Correct. Diffusely INCREASED uptake means the gland is actively trapping iodine and synthesizing hormone under stimulation—in a young woman with symmetric goiter and orbitopathy, this is Graves disease, caused by TSH-receptor–stimulating antibodies. The orbitopathy is essentially specific to Graves among the thyrotoxic causes.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Definitive options and their trade-offs</div><div>After beta-blockade controls symptoms, definitive treatment for Graves is one of three: a <strong>thionamide</strong> (methimazole, or PTU in the first trimester of pregnancy), <strong>radioactive iodine</strong> ablation (avoid in pregnancy and in active moderate-severe eye disease, which it can worsen), or <strong>thyroidectomy</strong> (rendered euthyroid first; risks recurrent laryngeal nerve injury and hypoparathyroidism). Methimazole is generally first-line outside early pregnancy.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Hyperthyroidism by uptake pattern</caption><thead><tr><th>Pattern</th><th>Diagnosis</th><th>Clue</th></tr></thead><tbody><tr><td>Diffuse uptake</td><td>Graves disease</td><td>Ophthalmopathy, TSH-receptor Ab, bruit</td></tr><tr><td>Single hot nodule</td><td>Toxic adenoma</td><td>Solitary nodule</td></tr><tr><td>Multiple hot nodules</td><td>Toxic multinodular goiter</td><td>Multiple nodules, older patient</td></tr><tr><td>LOW/absent uptake</td><td>Thyroiditis</td><td>Painful (de Quervain) or post-viral; self-limited</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Diffusely INCREASED radioiodine uptake = active synthesis under stimulation → Graves (TSH-receptor antibodies); orbitopathy is Graves-specific. LOW uptake = thyroiditis (hormone leak), exogenous hormone, or iodine load. Uptake pattern separates the causes of thyrotoxicosis.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c2" data-cid="c2">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c2">
+      <textarea id="note-ta-c2" data-cid="c2" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c2"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c3" data-correct="1"
+     data-fc-front="A Complication Two Weeks Into Therapy [Case 2 of 2]" data-fc-back="Answer: Stop methimazole and obtain a complete blood count with differential">
+  <div class="vignette">The same patient is started on methimazole and a beta-blocker. Twelve days later she develops a fever of 38.8°C and a severe sore throat with painful swallowing. She looks unwell. Her pulse is 96/min (now controlled). A rapid strep test is negative.</div>
+  <div class="question">❓ Which of the following is the most appropriate immediate action?</div>
+  <div class="options" id="opts-c3">
+<div class="opt" data-cid="c3" data-idx="0"><div class="key">A</div><div>Switch methimazole to propylthiouracil and continue outpatient</div></div>
+<div class="opt" data-cid="c3" data-idx="1"><div class="key">B</div><div>Stop methimazole and obtain a complete blood count with differential</div></div>
+<div class="opt" data-cid="c3" data-idx="2"><div class="key">C</div><div>Continue methimazole and treat the pharyngitis symptomatically</div></div>
+<div class="opt" data-cid="c3" data-idx="3"><div class="key">D</div><div>Increase the methimazole dose to better control the thyroid</div></div>
+<div class="opt" data-cid="c3" data-idx="4"><div class="key">E</div><div>Add a course of oral corticosteroids and reassess in 48 hours</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c3" data-cid="c3" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c3">↺ Reset</button>
+  </div>
+  <div id="c3" class="answer">
+    <div class="exhead" id="exhead-c3"></div>
+    <div class="exrows" id="exrows-c3">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Switching to PTU does not help—agranulocytosis is a shared class effect—and PTU adds hepatotoxicity risk; outpatient management without a CBC is unsafe.</div></div>
+<div class="exrow r" data-idx="1"><div class="lab">B</div><div>Correct. Fever and pharyngitis in a patient on a thionamide must be treated as possible agranulocytosis. The immediate action is to STOP the drug and check a CBC with differential (to detect severe neutropenia); if neutropenic, admit for broad-spectrum IV antibiotics. Delaying to &#x27;rule out&#x27; a viral cause risks fatal neutropenic sepsis.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Continuing the drug while the patient may be agranulocytic is dangerous.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Increasing the dose worsens the risk from the likely causative agent.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Steroids neither treat nor exclude agranulocytosis and would delay the necessary CBC and drug cessation.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Other thionamide adverse effects</div><div>Besides agranulocytosis (a shared class effect), PTU carries a risk of severe <strong>hepatotoxicity</strong> (and is reserved mainly for the first trimester of pregnancy and thyroid storm), while methimazole is <strong>teratogenic</strong> in the first trimester (aplasia cutis, embryopathy). Counsel patients to report fever or sore throat immediately; routine CBC monitoring is advised.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; Thionamide + fever/sore throat = stop and check now</div><div>Agranulocytosis from PTU or methimazole is rare but life-threatening. Any febrile illness or sore throat warrants immediate cessation of the drug, an urgent CBC with differential, and broad-spectrum IV antibiotics for neutropenic infection. Do not 'wait and see' or simply switch thionamides.</div></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Any febrile illness/sore throat on methimazole or PTU → stop the drug NOW and check a CBC with differential; treat neutropenic infection with IV antibiotics. Don&#x27;t switch thionamides (shared agranulocytosis risk) and don&#x27;t wait to exclude a viral cause.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c3" data-cid="c3">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c3">
+      <textarea id="note-ta-c3" data-cid="c3" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c3"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c4" data-correct="2"
+     data-fc-front="Subclinical Thyroid Result on Routine Labs" data-fc-back="Answer: A TSH persistently above 10 µU/mL on repeat testing">
+  <div class="vignette">A 49-year-old woman has a screening TSH of 8.9 µU/mL (reference 0.5–4.5) with a normal free T4. She reports feeling well. Thyroid peroxidase antibodies are strongly positive. She is not pregnant and has no cardiac symptoms. A repeat TSH 8 weeks later is 9.2 µU/mL with a normal free T4. Her LDL and weight are unchanged.</div>
+  <div class="question">❓ Which of the following is the strongest indication that would favor starting levothyroxine in this patient?</div>
+  <div class="options" id="opts-c4">
+<div class="opt" data-cid="c4" data-idx="0"><div class="key">A</div><div>The presence of positive thyroid peroxidase antibodies</div></div>
+<div class="opt" data-cid="c4" data-idx="1"><div class="key">B</div><div>Her age over 45 years</div></div>
+<div class="opt" data-cid="c4" data-idx="2"><div class="key">C</div><div>A TSH persistently above 10 µU/mL on repeat testing</div></div>
+<div class="opt" data-cid="c4" data-idx="3"><div class="key">D</div><div>A normal free T4 level</div></div>
+<div class="opt" data-cid="c4" data-idx="4"><div class="key">E</div><div>A single TSH value between 7 and 9.5 µU/mL</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c4" data-cid="c4" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c4">↺ Reset</button>
+  </div>
+  <div id="c4" class="answer">
+    <div class="exhead" id="exhead-c4"></div>
+    <div class="exrows" id="exrows-c4">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Positive TPO antibodies predict progression to overt hypothyroidism and may tip the decision, but alone they are a weaker indication than a TSH &gt;10.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Age over 45 is not itself an indication to treat; in older adults a higher TSH threshold is often tolerated.</div></div>
+<div class="exrow r" data-idx="2"><div class="lab">C</div><div>Correct. This is subclinical hypothyroidism (elevated TSH, normal free T4). Treatment is generally recommended when TSH is persistently ≥10 µU/mL, or for symptoms, pregnancy/intent to conceive, or sometimes positive antibodies with a rising trend. Of the listed choices, a confirmed TSH &gt;10 is the strongest, guideline-supported trigger to treat.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>A normal free T4 is what defines the condition as subclinical—it is not an indication to treat.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>A TSH in the 7–9.5 range without symptoms or other factors generally warrants monitoring, not treatment.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Reading the subclinical picture</div><div>Subclinical hypothyroidism is defined by an elevated TSH with a NORMAL free T4. Confirm with a repeat measurement (transient TSH elevations are common after illness). The strongest, guideline-supported reason to treat is a TSH persistently ≥10 µU/mL; otherwise, treat for symptoms, pregnancy or conception plans, or positive TPO antibodies with a rising TSH. In older adults a higher TSH is generally tolerated, and overtreatment risks atrial fibrillation and bone loss.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">When to treat subclinical hypothyroidism</caption><thead><tr><th>Favor treatment</th><th>Favor monitoring</th></tr></thead><tbody><tr><td>TSH persistently ≥10 µU/mL</td><td>TSH 4.5–10 and asymptomatic</td></tr><tr><td>Symptomatic (esp. if a trial is reasonable)</td><td>No symptoms</td></tr><tr><td>Pregnant or planning pregnancy</td><td>Older adult (higher TSH tolerated)</td></tr><tr><td>Positive TPO antibodies with rising TSH</td><td>Stable, isolated mild elevation</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Subclinical hypothyroidism = high TSH, normal free T4. Treat mainly when TSH is persistently ≥10, or for symptoms, pregnancy/conception plans, or positive TPO antibodies with rising TSH. Otherwise monitor; older adults tolerate higher TSH targets.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c4" data-cid="c4">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c4">
+      <textarea id="note-ta-c4" data-cid="c4" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c4"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c5" data-correct="4"
+     data-fc-front="Hyperglycemia With an Acid-Base Disturbance" data-fc-back="Answer: Total-body potassium is depleted despite the high serum level, because acidosis and insuli">
+  <div class="vignette">A 19-year-old man presents with 2 days of vomiting, abdominal pain, and deep, rapid breathing. He has lost weight over the past month with thirst and frequent urination. He is hypotensive and dehydrated. Labs: glucose 430 mg/dL, sodium 130 mEq/L, potassium 5.4 mEq/L, bicarbonate 8 mEq/L, chloride 96 mEq/L, pH 7.18. Serum beta-hydroxybutyrate is markedly elevated.</div>
+  <div class="question">❓ His measured serum potassium is at the upper end of normal-to-high. Which of the following best describes his total-body potassium status and the reason?</div>
+  <div class="options" id="opts-c5">
+<div class="opt" data-cid="c5" data-idx="0"><div class="key">A</div><div>Total-body potassium is elevated, reflecting true potassium overload from renal retention</div></div>
+<div class="opt" data-cid="c5" data-idx="1"><div class="key">B</div><div>Total-body potassium is normal, and the serum value can be taken at face value</div></div>
+<div class="opt" data-cid="c5" data-idx="2"><div class="key">C</div><div>Total-body potassium is elevated because insulin excess traps potassium inside cells</div></div>
+<div class="opt" data-cid="c5" data-idx="3"><div class="key">D</div><div>Total-body potassium is depleted because of metabolic alkalosis driving potassium into cells</div></div>
+<div class="opt" data-cid="c5" data-idx="4"><div class="key">E</div><div>Total-body potassium is depleted despite the high serum level, because acidosis and insulin deficiency shift potassium out of cells while osmotic diuresis wastes it</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c5" data-cid="c5" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c5">↺ Reset</button>
+  </div>
+  <div id="c5" class="answer">
+    <div class="exhead" id="exhead-c5"></div>
+    <div class="exrows" id="exrows-c5">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>The high serum level is a redistribution artifact, not true overload; total-body stores are low.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Taking the serum value at face value risks dangerous hypokalemia once insulin is given.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>There is insulin DEFICIENCY, not excess, in DKA.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>DKA causes acidosis, not alkalosis; the shift direction described is wrong.</div></div>
+<div class="exrow r" data-idx="4"><div class="lab">E</div><div>Correct. In diabetic ketoacidosis, insulin deficiency and acidemia drive potassium OUT of cells into the serum (masking a deficit), while the osmotic diuresis and ketoanion excretion waste large amounts of potassium in the urine. So total-body potassium is markedly DEPLETED even when the serum value looks normal or high. This is why potassium must be repleted (and confirmed &gt;3.3) before/with starting insulin, since insulin will rapidly shift potassium back into cells.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Potassium is the safety issue</div><div>Total body potassium is depleted in DKA even when the serum level looks normal or high (acidosis and insulin deficiency shift K⁺ out of cells; osmotic diuresis wastes it). Because insulin drives potassium back into cells, give fluids first, ensure K⁺ is above ~3.3–5.3 before/with starting insulin, and replace potassium to avoid life-threatening hypokalemia. Track resolution with the anion gap and beta-hydroxybutyrate, not glucose alone, and overlap subcutaneous insulin before stopping the drip.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">DKA vs HHS</caption><thead><tr><th>Feature</th><th>DKA</th><th>HHS</th></tr></thead><tbody><tr><td>Typical patient</td><td>Type 1 (often new)</td><td>Type 2, older</td></tr><tr><td>Glucose</td><td>Usually 300–600+</td><td>Often >600</td></tr><tr><td>Ketones/acidosis</td><td>Marked; anion-gap acidosis</td><td>Minimal; little/no acidosis</td></tr><tr><td>Osmolality</td><td>Elevated</td><td>Markedly elevated (>320)</td></tr><tr><td>Shared treatment</td><td>Fluids → K⁺ → insulin</td><td>Fluids → K⁺ → insulin</td></tr></tbody></table></div>
+    <svg class="infographic-svg" viewBox="0 0 520 160" role="img" aria-label="DKA treatment order">
+  <rect x="0" y="0" width="520" height="160" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">DKA — Order of Treatment</text>
+  <rect x="20" y="40" width="140" height="44" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="34" y="62" font-size="11" font-weight="bold" fill="#15598f">1. IV fluids</text>
+  <text x="34" y="78" font-size="9.5" fill="#1f2d3a">0.9% saline</text>
+  <text x="168" y="66" font-size="16" fill="#9db8cc">&#8594;</text>
+  <rect x="186" y="40" width="150" height="44" rx="6" fill="#fdf0d5" stroke="#d9920a"/>
+  <text x="200" y="62" font-size="11" font-weight="bold" fill="#b9760a">2. Potassium</text>
+  <text x="200" y="78" font-size="9.5" fill="#1f2d3a">if K &lt; 5.3 mEq/L</text>
+  <text x="344" y="66" font-size="16" fill="#9db8cc">&#8594;</text>
+  <rect x="362" y="40" width="138" height="44" rx="6" fill="#e7f6ec" stroke="#1f8a4c"/>
+  <text x="376" y="62" font-size="11" font-weight="bold" fill="#1f8a4c">3. Insulin</text>
+  <text x="376" y="78" font-size="9.5" fill="#1f2d3a">after K checked</text>
+  <rect x="20" y="100" width="480" height="46" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="34" y="120" font-size="10.5" font-weight="bold" fill="#c0392b">Why this order?</text>
+  <text x="34" y="138" font-size="10" fill="#1f2d3a">Insulin drives K⁺ into cells — giving it before repleting K⁺ can cause dangerous hypokalemia.</text>
+</svg>
+    <div class="pearl"><strong>USMLE Pearl:</strong> In DKA the serum potassium misleads: acidosis + insulin deficiency push K⁺ out of cells while diuresis wastes it, so total-body K⁺ is depleted. Replete K⁺ (ensure &gt;3.3) before/with insulin, because insulin drives K⁺ intracellularly and can cause fatal hypokalemia.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c5" data-cid="c5">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c5">
+      <textarea id="note-ta-c5" data-cid="c5" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c5"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c6" data-correct="3"
+     data-fc-front="Resistant Hypertension With an Electrolyte Clue" data-fc-back="Answer: An aldosterone suppression test (e.g., saline infusion or oral salt loading)">
+  <div class="vignette">A 38-year-old woman has hypertension inadequately controlled on three agents, including a thiazide. She reports muscle cramps and polyuria. Off the thiazide for 3 weeks, her potassium remains 3.1 mEq/L with a bicarbonate of 31 mEq/L. She is not vomiting and uses no licorice, NSAIDs, or over-the-counter products. Plasma renin activity is low and plasma aldosterone is high, with an elevated aldosterone-to-renin ratio.</div>
+  <div class="question">❓ Which of the following is the most appropriate next step to confirm the diagnosis?</div>
+  <div class="options" id="opts-c6">
+<div class="opt" data-cid="c6" data-idx="0"><div class="key">A</div><div>Begin spironolactone and treat empirically without confirmation</div></div>
+<div class="opt" data-cid="c6" data-idx="1"><div class="key">B</div><div>Measure plasma metanephrines</div></div>
+<div class="opt" data-cid="c6" data-idx="2"><div class="key">C</div><div>Adrenal CT before any biochemical confirmation</div></div>
+<div class="opt" data-cid="c6" data-idx="3"><div class="key">D</div><div>An aldosterone suppression test (e.g., saline infusion or oral salt loading)</div></div>
+<div class="opt" data-cid="c6" data-idx="4"><div class="key">E</div><div>Adrenal venous sampling as the immediate confirmatory test</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c6" data-cid="c6" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c6">↺ Reset</button>
+  </div>
+  <div id="c6" class="answer">
+    <div class="exhead" id="exhead-c6"></div>
+    <div class="exrows" id="exrows-c6">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Empiric spironolactone forgoes identifying a potentially curable unilateral adenoma and is not a diagnostic confirmation.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Metanephrines screen for pheochromocytoma, which does not fit a hypokalemic, alkalotic, high-aldosterone/low-renin picture.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Imaging before confirmation risks being misled by nonfunctioning adrenal incidentalomas.</div></div>
+<div class="exrow r" data-idx="3"><div class="lab">D</div><div>Correct. The screening aldosterone-to-renin ratio is elevated (high aldosterone, suppressed renin), suggesting primary aldosteronism. A positive SCREEN must be CONFIRMED by demonstrating non-suppressible aldosterone with a suppression test (saline infusion or oral sodium loading) before subtyping. Only after confirmation do you localize.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Adrenal venous sampling is for SUBTYPING (unilateral vs bilateral) AFTER biochemical confirmation, not the immediate next step.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Confirm and subtype before treating</div><div>A positive aldosterone-to-renin ratio (high aldosterone, suppressed renin) is a screen, not a diagnosis. Confirm with a suppression test (e.g., saline infusion showing non-suppressible aldosterone), then obtain adrenal CT and often <strong>adrenal vein sampling</strong> to distinguish a unilateral aldosterone-producing adenoma (curable by adrenalectomy) from bilateral adrenal hyperplasia (treated medically with a mineralocorticoid receptor antagonist such as spironolactone or eplerenone). An elevated aldosterone WITH high renin instead points to secondary causes (renal artery stenosis, renal hypoperfusion).</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Secondary hypertension — screening clues</caption><thead><tr><th>Clue</th><th>Suspect</th><th>Screen</th></tr></thead><tbody><tr><td>HTN + hypokalemia + alkalosis</td><td>Primary aldosteronism</td><td>Aldosterone-to-renin ratio</td></tr><tr><td>Episodic HA/palpitations/sweating</td><td>Pheochromocytoma</td><td>Plasma free metanephrines</td></tr><tr><td>Central obesity, striae, glucose intolerance</td><td>Cushing syndrome</td><td>Dexamethasone suppression / cortisol</td></tr><tr><td>Young woman, abdominal bruit</td><td>Fibromuscular dysplasia</td><td>Renal artery imaging</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Primary aldosteronism workup: (1) SCREEN with aldosterone-to-renin ratio (high aldosterone, low renin); (2) CONFIRM with a suppression test showing non-suppressible aldosterone; (3) SUBTYPE with CT ± adrenal vein sampling. Don&#x27;t image or treat before biochemical confirmation.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c6" data-cid="c6">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c6">
+      <textarea id="note-ta-c6" data-cid="c6" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c6"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c7" data-correct="4"
+     data-fc-front="A Tender Thyroid and a Discriminating Test" data-fc-back="Answer: Low radioactive iodine uptake on scanning">
+  <div class="vignette">A 35-year-old woman has 10 days of anterior neck pain radiating to the jaw, low-grade fever, and palpitations following a viral illness. The thyroid is tender. TSH is low and free T4 is mildly elevated. ESR and CRP are elevated. She is worried this is the same &#x27;overactive thyroid&#x27; her sister has (Graves disease) and asks how they will be told apart.</div>
+  <div class="question">❓ Which of the following findings would most reliably distinguish her condition from Graves disease?</div>
+  <div class="options" id="opts-c7">
+<div class="opt" data-cid="c7" data-idx="0"><div class="key">A</div><div>The presence of palpitations and tremor</div></div>
+<div class="opt" data-cid="c7" data-idx="1"><div class="key">B</div><div>A suppressed TSH level</div></div>
+<div class="opt" data-cid="c7" data-idx="2"><div class="key">C</div><div>A diffusely enlarged thyroid</div></div>
+<div class="opt" data-cid="c7" data-idx="3"><div class="key">D</div><div>An elevated free T4 level</div></div>
+<div class="opt" data-cid="c7" data-idx="4"><div class="key">E</div><div>Low radioactive iodine uptake on scanning</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c7" data-cid="c7" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c7">↺ Reset</button>
+  </div>
+  <div id="c7" class="answer">
+    <div class="exhead" id="exhead-c7"></div>
+    <div class="exrows" id="exrows-c7">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Palpitations and tremor are shared adrenergic features.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>A suppressed TSH occurs in both thyrotoxic states.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Both can produce a diffusely enlarged gland; tenderness favors thyroiditis but is less reliable than uptake.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>An elevated free T4 occurs in both and cannot distinguish them.</div></div>
+<div class="exrow r" data-idx="4"><div class="lab">E</div><div>Correct. Both subacute (de Quervain) thyroiditis and Graves cause thyrotoxic labs (low TSH, high T4) and overlapping symptoms. The discriminating test is radioiodine UPTAKE: it is LOW in subacute thyroiditis (hormone leaks from damaged follicles without new synthesis) and HIGH in Graves (active, antibody-driven synthesis). The pain and high inflammatory markers also point to thyroiditis, but uptake is the reliable separator.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">The triphasic course</div><div>Subacute (de Quervain) thyroiditis classically passes through three phases: an initial THYROTOXIC phase (preformed hormone leaks from inflamed follicles, so radioiodine uptake is LOW), then a HYPOTHYROID phase as stores deplete, then RECOVERY in most patients. Because there is no ongoing hormone overproduction, antithyroid drugs are unhelpful—treat the pain/inflammation with NSAIDs (steroids if severe) and symptoms with a beta-blocker.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Thyroiditis quick contrast</caption><thead><tr><th>Type</th><th>Clue</th><th>Uptake</th></tr></thead><tbody><tr><td>Subacute (de Quervain)</td><td>Painful/tender, post-viral, high ESR</td><td>LOW</td></tr><tr><td>Hashimoto</td><td>Non-tender goiter, anti-TPO</td><td>Low</td></tr><tr><td>Graves</td><td>Diffuse goiter + bruit, ophthalmopathy</td><td>HIGH (diffuse)</td></tr><tr><td>Postpartum</td><td>Within 1 year of delivery, painless</td><td>Low (thyrotoxic phase)</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Thyrotoxicosis with LOW radioiodine uptake = thyroiditis (de Quervain, painful; or painless/postpartum), exogenous hormone, or iodine load. HIGH uptake = Graves or toxic nodular disease. When labs overlap, uptake is the discriminator. De Quervain is self-limited: NSAIDs + beta-blocker.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c7" data-cid="c7">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c7">
+      <textarea id="note-ta-c7" data-cid="c7" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c7"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c8" data-correct="2"
+     data-fc-front="A Thyroid Nodule With a Suppressed TSH" data-fc-back="Answer: Radioactive iodine uptake and scan">
+  <div class="vignette">A 58-year-old woman is found to have a 2.5-cm thyroid nodule. She has mild palpitations. Serum TSH is 0.1 µU/mL (low) and free T4 is high-normal. Ultrasound shows a solid nodule with smooth margins. She is concerned about cancer and expects a biopsy.</div>
+  <div class="question">❓ Which of the following is the most appropriate next step?</div>
+  <div class="options" id="opts-c8">
+<div class="opt" data-cid="c8" data-idx="0"><div class="key">A</div><div>Immediate fine-needle aspiration biopsy</div></div>
+<div class="opt" data-cid="c8" data-idx="1"><div class="key">B</div><div>Repeat ultrasound in 12 months</div></div>
+<div class="opt" data-cid="c8" data-idx="2"><div class="key">C</div><div>Radioactive iodine uptake and scan</div></div>
+<div class="opt" data-cid="c8" data-idx="3"><div class="key">D</div><div>Start levothyroxine to suppress the nodule</div></div>
+<div class="opt" data-cid="c8" data-idx="4"><div class="key">E</div><div>Total thyroidectomy</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c8" data-cid="c8" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c8">↺ Reset</button>
+  </div>
+  <div id="c8" class="answer">
+    <div class="exhead" id="exhead-c8"></div>
+    <div class="exrows" id="exrows-c8">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Immediate FNA is appropriate when TSH is normal/high; here the low TSH mandates a scan first because a hot nodule does not need biopsy.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Deferring evaluation ignores the abnormal TSH and the need to characterize the nodule.</div></div>
+<div class="exrow r" data-idx="2"><div class="lab">C</div><div>Correct. With a LOW TSH, the next step is a radioiodine scan rather than immediate biopsy. A nodule that is &#x27;hot&#x27; (autonomously functioning) on the scan is almost never malignant and is treated for hyperthyroidism (radioiodine or surgery)—avoiding an unnecessary FNA. FNA is reserved for non-functioning (&#x27;cold&#x27;) or sonographically suspicious nodules with a normal/high TSH.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Levothyroxine suppression is inappropriate and would worsen her subclinical hyperthyroidism.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Surgery is premature before functional and cytologic characterization.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Nodule workup logic</div><div>Start every thyroid nodule with a TSH and ultrasound. If TSH is LOW, obtain a radioiodine scan: a hyperfunctioning ('hot') nodule is almost never malignant and is treated for hyperthyroidism rather than biopsied. If TSH is normal or high, base the decision to do fine-needle aspiration on size and sonographic risk (solid, hypoechoic, microcalcifications, irregular margins, taller-than-wide). Cytology then guides surveillance versus surgery.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Sonographic features raising malignancy concern</caption><thead><tr><th>Higher risk</th><th>Lower risk</th></tr></thead><tbody><tr><td>Solid + hypoechoic</td><td>Purely cystic</td></tr><tr><td>Microcalcifications</td><td>Spongiform</td></tr><tr><td>Irregular/infiltrative margins</td><td>Smooth margins</td></tr><tr><td>Taller-than-wide shape</td><td>Wider-than-tall</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Thyroid nodule + LOW TSH → radioiodine scan FIRST. Hot (functioning) nodule = rarely malignant → treat hyperthyroidism, skip FNA. Cold nodule or normal/high TSH with suspicious ultrasound → FNA. Let the TSH steer the workup.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c8" data-cid="c8">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c8">
+      <textarea id="note-ta-c8" data-cid="c8" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c8"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c9" data-correct="1"
+     data-fc-front="Confusion and Marked Hyperglycemia" data-fc-back="Answer: Repletion of potassium because it is below 3.3 mEq/L">
+  <div class="vignette">A 68-year-old woman with type 2 diabetes is brought in after 3 days of declining oral intake during a urinary tract infection. She is lethargic and very dry. Labs: glucose 1080 mg/dL, sodium 150 mEq/L (corrected higher), potassium 3.2 mEq/L, bicarbonate 22 mEq/L, pH 7.34, with only trace serum ketones. Calculated effective serum osmolality is 340 mOsm/kg.</div>
+  <div class="question">❓ After starting aggressive isotonic fluids, which of the following must be addressed before initiating an insulin infusion?</div>
+  <div class="options" id="opts-c9">
+<div class="opt" data-cid="c9" data-idx="0"><div class="key">A</div><div>Correction of the mild acidosis with bicarbonate</div></div>
+<div class="opt" data-cid="c9" data-idx="1"><div class="key">B</div><div>Repletion of potassium because it is below 3.3 mEq/L</div></div>
+<div class="opt" data-cid="c9" data-idx="2"><div class="key">C</div><div>Administration of empiric antibiotics in the same step</div></div>
+<div class="opt" data-cid="c9" data-idx="3"><div class="key">D</div><div>Rapid normalization of serum sodium</div></div>
+<div class="opt" data-cid="c9" data-idx="4"><div class="key">E</div><div>Immediate high-dose insulin bolus to lower osmolality quickly</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c9" data-cid="c9" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c9">↺ Reset</button>
+  </div>
+  <div id="c9" class="answer">
+    <div class="exhead" id="exhead-c9"></div>
+    <div class="exrows" id="exrows-c9">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>There is no significant acidosis in HHS, and bicarbonate is not indicated.</div></div>
+<div class="exrow r" data-idx="1"><div class="lab">B</div><div>Correct. In the hyperosmolar hyperglycemic state (and DKA), insulin shifts potassium intracellularly. With a serum potassium already low (3.2), giving insulin first could precipitate life-threatening hypokalemia and arrhythmia. After fluids, potassium must be repleted to &gt;3.3 mEq/L before starting the insulin infusion.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Treating the precipitating infection is important but is not the specific prerequisite for safely starting insulin.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Sodium should be corrected gradually as fluids and glucose normalize; rapid correction risks osmotic demyelination.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>A high-dose insulin bolus before volume and potassium are addressed risks circulatory collapse and hypokalemia.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Find and fix the precipitant</div><div>HHS is often triggered by infection, medication nonadherence, or a new illness in an older type 2 diabetic. Management mirrors DKA—aggressive volume resuscitation, potassium repletion, then insulin—but fluid deficits are even larger and acidosis is minimal. Search for and treat the underlying precipitant, and transition to a maintenance insulin regimen once the hyperosmolar state resolves.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; HHS: fluids before insulin</div><div>Like DKA, give IV isotonic fluids first and ensure potassium is repleted before insulin—insulin shifts K⁺ intracellularly and can precipitate dangerous hypokalemia. Correct osmolality gradually to avoid cerebral edema/osmotic demyelination.</div></div>
+    <svg class="infographic-svg" viewBox="0 0 520 160" role="img" aria-label="DKA treatment order">
+  <rect x="0" y="0" width="520" height="160" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">DKA — Order of Treatment</text>
+  <rect x="20" y="40" width="140" height="44" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="34" y="62" font-size="11" font-weight="bold" fill="#15598f">1. IV fluids</text>
+  <text x="34" y="78" font-size="9.5" fill="#1f2d3a">0.9% saline</text>
+  <text x="168" y="66" font-size="16" fill="#9db8cc">&#8594;</text>
+  <rect x="186" y="40" width="150" height="44" rx="6" fill="#fdf0d5" stroke="#d9920a"/>
+  <text x="200" y="62" font-size="11" font-weight="bold" fill="#b9760a">2. Potassium</text>
+  <text x="200" y="78" font-size="9.5" fill="#1f2d3a">if K &lt; 5.3 mEq/L</text>
+  <text x="344" y="66" font-size="16" fill="#9db8cc">&#8594;</text>
+  <rect x="362" y="40" width="138" height="44" rx="6" fill="#e7f6ec" stroke="#1f8a4c"/>
+  <text x="376" y="62" font-size="11" font-weight="bold" fill="#1f8a4c">3. Insulin</text>
+  <text x="376" y="78" font-size="9.5" fill="#1f2d3a">after K checked</text>
+  <rect x="20" y="100" width="480" height="46" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="34" y="120" font-size="10.5" font-weight="bold" fill="#c0392b">Why this order?</text>
+  <text x="34" y="138" font-size="10" fill="#1f2d3a">Insulin drives K⁺ into cells — giving it before repleting K⁺ can cause dangerous hypokalemia.</text>
+</svg>
+    <div class="pearl"><strong>USMLE Pearl:</strong> HHS/DKA insulin safety: after fluids, ensure potassium &gt;3.3 mEq/L BEFORE starting insulin, because insulin drives K⁺ into cells. Give fluids first, replete K⁺ as needed, then insulin; correct sodium and osmolality gradually and treat the precipitant.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c9" data-cid="c9">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c9">
+      <textarea id="note-ta-c9" data-cid="c9" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c9"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c10" data-correct="4"
+     data-fc-front="Severe Hypoglycemia in the Field [Case 1 of 2]" data-fc-back="Answer: Intramuscular glucagon">
+  <div class="vignette">A 54-year-old man with type 2 diabetes is found stuporous by his wife. Paramedics measure a capillary glucose of 18 mg/dL. He is not arousable enough to swallow safely, and repeated attempts to establish intravenous access in the field fail. His wife reports he recently had a medication change but cannot recall the name.
+
+This is the first of two linked questions about the same patient.</div>
+  <div class="question">❓ Which of the following is the most appropriate immediate treatment given the lack of IV access?</div>
+  <div class="options" id="opts-c10">
+<div class="opt" data-cid="c10" data-idx="0"><div class="key">A</div><div>Subcutaneous rapid-acting insulin</div></div>
+<div class="opt" data-cid="c10" data-idx="1"><div class="key">B</div><div>Intramuscular octreotide</div></div>
+<div class="opt" data-cid="c10" data-idx="2"><div class="key">C</div><div>Wait and re-attempt IV access before any treatment</div></div>
+<div class="opt" data-cid="c10" data-idx="3"><div class="key">D</div><div>Oral glucose gel applied to the buccal mucosa</div></div>
+<div class="opt" data-cid="c10" data-idx="4"><div class="key">E</div><div>Intramuscular glucagon</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c10" data-cid="c10" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c10">↺ Reset</button>
+  </div>
+  <div id="c10" class="answer">
+    <div class="exhead" id="exhead-c10"></div>
+    <div class="exrows" id="exrows-c10">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Insulin would deepen the hypoglycemia and is dangerous.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Octreotide is an adjunct for recurrent sulfonylurea-induced hypoglycemia, not the field rescue for an obtunded patient—glucagon is.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Delaying treatment to keep attempting IV access risks neuroglycopenic injury.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Buccal/oral glucose risks aspiration in someone who cannot swallow safely.</div></div>
+<div class="exrow r" data-idx="4"><div class="lab">E</div><div>Correct. With profound hypoglycemia, an unprotected airway, and no IV access, intramuscular (or intranasal) glucagon is the immediate treatment to mobilize hepatic glucose. Oral/buccal glucose is unsafe in a stuporous patient (aspiration), and treatment should not be delayed.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Recognize and reverse hypoglycemia</div><div>Hypoglycemia produces autonomic symptoms (sweating, tremor, palpitations, hunger, anxiety) and neuroglycopenic symptoms (confusion, visual change, seizures, coma). Recurrent episodes blunt awareness and raise future risk. Awake patients get oral carbohydrate; obtunded patients get IV dextrose (with access) or IM/intranasal glucagon (without access). Patients with type 1 diabetes and CKD are especially prone—reduce insulin and lower the dose before exercise.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; Unconscious + no IV access = IM/intranasal glucagon</div><div>Never put oral glucose in the mouth of an obtunded patient (aspiration). If there is no IV access, give intramuscular or intranasal glucagon immediately, then obtain access for IV dextrose once feasible.</div></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Severe hypoglycemia, can&#x27;t protect airway, no IV access → IM/intranasal glucagon now. Awake or IV access → oral carbs or IV dextrose. Never give oral glucose to an obtunded patient. Glucagon needs hepatic glycogen, so its effect can be brief—follow with glucose.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c10" data-cid="c10">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c10">
+      <textarea id="note-ta-c10" data-cid="c10" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c10"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c11" data-correct="3"
+     data-fc-front="Recurrent Hypoglycemia and a Mechanism [Case 2 of 2]" data-fc-back="Answer: Octreotide">
+  <div class="vignette">In the emergency department the same patient improves with IV dextrose, and his wife brings in his pill bottle: glipizide, recently increased. Over the next several hours his glucose repeatedly falls into the 40s despite a continuous dextrose infusion, and he has mild chronic kidney disease.</div>
+  <div class="question">❓ Adding which of the following would most directly counteract the mechanism driving his recurrent hypoglycemia?</div>
+  <div class="options" id="opts-c11">
+<div class="opt" data-cid="c11" data-idx="0"><div class="key">A</div><div>Hydrocortisone</div></div>
+<div class="opt" data-cid="c11" data-idx="1"><div class="key">B</div><div>Diazoxide started at home</div></div>
+<div class="opt" data-cid="c11" data-idx="2"><div class="key">C</div><div>Repeated intramuscular glucagon</div></div>
+<div class="opt" data-cid="c11" data-idx="3"><div class="key">D</div><div>Octreotide</div></div>
+<div class="opt" data-cid="c11" data-idx="4"><div class="key">E</div><div>Metformin</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c11" data-cid="c11" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c11">↺ Reset</button>
+  </div>
+  <div id="c11" class="answer">
+    <div class="exhead" id="exhead-c11"></div>
+    <div class="exrows" id="exrows-c11">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Hydrocortisone treats adrenal insufficiency, not sulfonylurea-driven insulin secretion.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Diazoxide can suppress insulin but is not the standard acute adjunct here and &#x27;started at home&#x27; is inappropriate for an unstable inpatient.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Repeated glucagon depletes hepatic glycogen and gives only transient benefit; it does not stop insulin secretion.</div></div>
+<div class="exrow r" data-idx="3"><div class="lab">D</div><div>Correct. Sulfonylureas like glipizide close beta-cell potassium channels and drive ongoing endogenous INSULIN secretion, so hypoglycemia recurs despite dextrose. Octreotide suppresses insulin release and directly counteracts this mechanism—the appropriate adjunct for refractory/recurrent sulfonylurea hypoglycemia, especially with renal impairment prolonging drug effect.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Metformin neither raises glucose acutely nor counters the secretory mechanism.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Why C-peptide and the drug screen matter later</div><div>When the cause of hypoglycemia is unclear, the insulin/C-peptide/sulfonylurea-screen pattern distinguishes mechanisms: endogenous hyperinsulinism (insulinoma) shows high insulin + high C-peptide + negative screen; exogenous insulin shows high insulin + LOW C-peptide; and sulfonylurea shows high insulin + high C-peptide + POSITIVE screen. In a known diabetic on a sulfonylurea, the drug itself is the obvious culprit—treat first.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; Sulfonylurea hypoglycemia recurs — add octreotide</div><div>Because sulfonylureas keep stimulating endogenous insulin, hypoglycemia often returns despite dextrose. Octreotide suppresses insulin release and is the adjunct for recurrent/refractory sulfonylurea-induced hypoglycemia. Long-acting agents and renal impairment prolong the danger—admit and monitor.</div></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Sulfonylurea hypoglycemia recurs because the drug keeps stimulating insulin secretion—give dextrose PLUS octreotide to suppress insulin. Renal impairment and long-acting agents prolong risk; admit and monitor rather than discharging after one correction.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c11" data-cid="c11">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c11">
+      <textarea id="note-ta-c11" data-cid="c11" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c11"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c12" data-correct="0"
+     data-fc-front="Fasting Spells and an Interpretation Problem" data-fc-back="Answer: Elevated C-peptide">
+  <div class="vignette">A 34-year-old nurse has recurrent episodes of confusion and sweating that resolve with juice, occurring mostly when meals are delayed. During a supervised 72-hour fast, at the time her glucose is 39 mg/dL, her insulin is elevated, C-peptide is elevated, proinsulin is elevated, and beta-hydroxybutyrate is low. A sulfonylurea/meglitinide screen is negative.</div>
+  <div class="question">❓ Which feature of her laboratory profile most specifically localizes the source of excess insulin to her own pancreas rather than an exogenous source?</div>
+  <div class="options" id="opts-c12">
+<div class="opt" data-cid="c12" data-idx="0"><div class="key">A</div><div>Elevated C-peptide</div></div>
+<div class="opt" data-cid="c12" data-idx="1"><div class="key">B</div><div>Low beta-hydroxybutyrate</div></div>
+<div class="opt" data-cid="c12" data-idx="2"><div class="key">C</div><div>Hypoglycemia during the fast</div></div>
+<div class="opt" data-cid="c12" data-idx="3"><div class="key">D</div><div>Elevated total insulin</div></div>
+<div class="opt" data-cid="c12" data-idx="4"><div class="key">E</div><div>Resolution of symptoms with carbohydrate</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c12" data-cid="c12" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c12">↺ Reset</button>
+  </div>
+  <div id="c12" class="answer">
+    <div class="exhead" id="exhead-c12"></div>
+    <div class="exrows" id="exrows-c12">
+<div class="exrow r" data-idx="0"><div class="lab">A</div><div>Correct. C-peptide is cleaved from proinsulin and co-secreted with ENDOGENOUS insulin in equimolar amounts. An elevated C-peptide during hypoglycemia indicates the pancreas is producing the insulin (insulinoma, or a secretagogue—excluded here by the negative drug screen). Exogenous (injected) insulin raises measured insulin but SUPPRESSES C-peptide, so C-peptide is the discriminator.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Low beta-hydroxybutyrate confirms an insulin effect (insulin suppresses ketogenesis) but does not distinguish endogenous from exogenous insulin.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Hypoglycemia during the fast establishes that the disorder is real but not its source.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Total insulin is elevated in BOTH endogenous hyperinsulinism and exogenous insulin administration, so it does not localize the source.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Symptom relief with carbohydrate is nonspecific to any cause of hypoglycemia.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Confirming and localizing an insulinoma</div><div>A supervised 72-hour fast that reproduces hypoglycemia with inappropriately elevated insulin, C-peptide, and proinsulin—and a negative sulfonylurea screen—establishes endogenous hyperinsulinism. The next step is pancreatic localization (CT/MRI, endoscopic ultrasound). Most insulinomas are small, solitary, benign beta-cell tumors cured by resection; consider MEN1 if there are other endocrine tumors.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Hypoglycemia: insulin / C-peptide / screen</caption><thead><tr><th>Cause</th><th>Insulin</th><th>C-peptide</th><th>Sulfonylurea screen</th></tr></thead><tbody><tr><td>Insulinoma</td><td>High</td><td>HIGH</td><td>Negative</td></tr><tr><td>Exogenous insulin</td><td>High</td><td>LOW</td><td>Negative</td></tr><tr><td>Sulfonylurea</td><td>High</td><td>High</td><td>POSITIVE</td></tr><tr><td>Normal fasting</td><td>Low</td><td>Low</td><td>Negative</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Endogenous hyperinsulinism (insulinoma): hypoglycemia with HIGH insulin + HIGH C-peptide + HIGH proinsulin + suppressed ketones, negative drug screen. C-peptide is the key discriminator—it&#x27;s HIGH with endogenous insulin and LOW with exogenous insulin. Next step: localize the pancreatic tumor.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c12" data-cid="c12">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c12">
+      <textarea id="note-ta-c12" data-cid="c12" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c12"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c13" data-correct="0"
+     data-fc-front="Choosing Therapy After a Cardiac Event" data-fc-back="Answer: An SGLT2 inhibitor">
+  <div class="vignette">A 61-year-old man with type 2 diabetes (HbA1c 8.3% on metformin), hypertension, and a recent anterior myocardial infarction now has a left ventricular ejection fraction of 35% and mild dyspnea on exertion. His eGFR is 64 mL/min. He is understandably anxious about adding medications and asks which additional diabetes drug would most help his heart, not just his sugar.</div>
+  <div class="question">❓ Beyond glycemic lowering, which agent provides the greatest reduction in heart-failure hospitalization for this patient?</div>
+  <div class="options" id="opts-c13">
+<div class="opt" data-cid="c13" data-idx="0"><div class="key">A</div><div>An SGLT2 inhibitor</div></div>
+<div class="opt" data-cid="c13" data-idx="1"><div class="key">B</div><div>A sulfonylurea</div></div>
+<div class="opt" data-cid="c13" data-idx="2"><div class="key">C</div><div>Basal insulin</div></div>
+<div class="opt" data-cid="c13" data-idx="3"><div class="key">D</div><div>A dipeptidyl peptidase-4 (DPP-4) inhibitor</div></div>
+<div class="opt" data-cid="c13" data-idx="4"><div class="key">E</div><div>Pioglitazone</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c13" data-cid="c13" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c13">↺ Reset</button>
+  </div>
+  <div id="c13" class="answer">
+    <div class="exhead" id="exhead-c13"></div>
+    <div class="exrows" id="exrows-c13">
+<div class="exrow r" data-idx="0"><div class="lab">A</div><div>Correct. In type 2 diabetes with heart failure (reduced ejection fraction), SGLT2 inhibitors reduce heart-failure hospitalizations and cardiovascular death—benefits independent of glucose lowering—so adding one to metformin is ideal here. (GLP-1 agonists chiefly reduce atherosclerotic events.) Counsel on genitourinary infection risk and euglycemic ketoacidosis.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Sulfonylureas lower glucose but add hypoglycemia/weight gain without heart-failure benefit.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Basal insulin controls glucose but does not reduce heart-failure events and adds hypoglycemia/weight gain.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>DPP-4 inhibitors are weight-neutral but lack heart-failure benefit, and saxagliptin may increase HF hospitalization.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Pioglitazone causes fluid retention and can WORSEN heart failure—contraindicated here.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Matching the drug to the comorbidity</div><div>Beyond glycemic control, choose agents for their organ-protective effects: an SGLT2 inhibitor for heart failure or chronic kidney disease, and an SGLT2 inhibitor or GLP-1 receptor agonist for established atherosclerotic cardiovascular disease. Avoid pioglitazone in heart failure, and avoid metformin in significant renal impairment. Statins are indicated in most diabetics over 40 for cardiovascular risk reduction.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Diabetes drugs with outcome benefits</caption><thead><tr><th>Agent</th><th>Key benefit</th><th>Caution</th></tr></thead><tbody><tr><td>Metformin</td><td>First-line; weight-neutral</td><td>Avoid in renal insufficiency (lactic acidosis)</td></tr><tr><td>SGLT2 inhibitor</td><td>↓ HF hospitalization, CV death, CKD progression</td><td>GU infections, euglycemic DKA</td></tr><tr><td>GLP-1 agonist</td><td>↓ ASCVD events, weight loss</td><td>GI upset; not in MTC/MEN2</td></tr><tr><td>Sulfonylurea</td><td>Cheap, effective</td><td>Hypoglycemia, weight gain</td></tr><tr><td>Pioglitazone</td><td>Durable A1c effect</td><td>Fluid retention — avoid in HF</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Type 2 diabetes + heart failure or CKD → SGLT2 inhibitor (reduces HF hospitalization, CV death, CKD progression). Established ASCVD → SGLT2 inhibitor or GLP-1 agonist. Avoid pioglitazone in heart failure; metformin remains the glycemic base.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c13" data-cid="c13">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c13">
+      <textarea id="note-ta-c13" data-cid="c13" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c13"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c14" data-correct="2"
+     data-fc-front="Hypercalcemia Found Incidentally" data-fc-back="Answer: The elevated 24-hour urine calcium">
+  <div class="vignette">A 56-year-old woman has a serum calcium of 11.4 mg/dL on routine labs, confirmed on repeat with a normal albumin. She has mild fatigue and a remote kidney stone. Phosphate is low-normal, and intact PTH is 78 pg/mL (reference 15–65). 24-hour urine calcium is elevated. Renal function is normal, and she takes no thiazide or lithium.</div>
+  <div class="question">❓ Which feature most strongly distinguishes her diagnosis from familial hypocalciuric hypercalcemia (FHH)?</div>
+  <div class="options" id="opts-c14">
+<div class="opt" data-cid="c14" data-idx="0"><div class="key">A</div><div>The mildly elevated serum calcium</div></div>
+<div class="opt" data-cid="c14" data-idx="1"><div class="key">B</div><div>The low-normal serum phosphate</div></div>
+<div class="opt" data-cid="c14" data-idx="2"><div class="key">C</div><div>The elevated 24-hour urine calcium</div></div>
+<div class="opt" data-cid="c14" data-idx="3"><div class="key">D</div><div>The presence of fatigue</div></div>
+<div class="opt" data-cid="c14" data-idx="4"><div class="key">E</div><div>The inappropriately non-suppressed PTH</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c14" data-cid="c14" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c14">↺ Reset</button>
+  </div>
+  <div id="c14" class="answer">
+    <div class="exhead" id="exhead-c14"></div>
+    <div class="exrows" id="exrows-c14">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Mild hypercalcemia occurs in both conditions and does not distinguish them.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Low-normal phosphate is consistent with PTH excess but is not the key discriminator from FHH.</div></div>
+<div class="exrow r" data-idx="2"><div class="lab">C</div><div>Correct. Both primary hyperparathyroidism and FHH show hypercalcemia with an inappropriately normal/high PTH, so PTH does NOT separate them. The discriminator is urine calcium: primary hyperparathyroidism has HIGH (or normal) urinary calcium, whereas FHH has LOW urinary calcium (low calcium-to-creatinine clearance ratio) due to a calcium-sensing receptor defect. Her elevated 24-hour urine calcium points to primary hyperparathyroidism (and FHH should not be treated surgically).</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Fatigue is nonspecific.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>A non-suppressed PTH is seen in both primary hyperparathyroidism AND FHH—so it cannot separate them.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Calcium follows PTH</div><div>Work up hypercalcemia by measuring PTH after confirming the value (with albumin/ionized calcium). An inappropriately HIGH or normal PTH points to primary hyperparathyroidism (usually an adenoma), which classically gives high calcium, LOW phosphate, and skeletal changes such as subperiosteal resorption, plus 'stones, bones, abdominal groans, and psychiatric overtones.' A SUPPRESSED PTH redirects you toward malignancy or vitamin D–mediated causes.</div></div>
+    <svg class="infographic-svg" viewBox="0 0 520 195" role="img" aria-label="Calcium and PTH interpretation">
+  <rect x="0" y="0" width="520" height="195" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">Hypercalcemia — Read the PTH</text>
+  <rect x="20" y="34" width="232" height="68" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="32" y="54" font-size="11" font-weight="bold" fill="#c0392b">High Ca + HIGH/normal PTH</text>
+  <text x="32" y="72" font-size="10" fill="#1f2d3a">Primary hyperparathyroidism</text>
+  <text x="32" y="88" font-size="9.5" fill="#5b6b7a">Low phosphate; adenoma; stones/bones</text>
+  <rect x="268" y="34" width="232" height="68" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="280" y="54" font-size="11" font-weight="bold" fill="#15598f">High Ca + LOW (suppressed) PTH</text>
+  <text x="280" y="72" font-size="10" fill="#1f2d3a">Malignancy (PTHrP), vitamin D excess</text>
+  <text x="280" y="88" font-size="9.5" fill="#5b6b7a">Sarcoid ↑ 1,25-vit D; myeloma; mets</text>
+  <rect x="20" y="110" width="480" height="72" rx="6" fill="#e7f6ec" stroke="#1f8a4c"/>
+  <text x="32" y="130" font-size="11" font-weight="bold" fill="#1f8a4c">Low calcium</text>
+  <text x="32" y="148" font-size="10" fill="#1f2d3a">High PTH → CKD (high phosphate), vitamin D deficiency</text>
+  <text x="32" y="164" font-size="10" fill="#1f2d3a">LOW PTH → hypoparathyroidism (e.g., post-thyroidectomy)</text>
+  <text x="32" y="178" font-size="9.5" fill="#5b6b7a">Refractory low Ca + low K → check magnesium</text>
+</svg>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Hypercalcemia + non-suppressed PTH = primary hyperparathyroidism OR familial hypocalciuric hypercalcemia. Differentiate by URINE calcium: HIGH/normal → primary hyperparathyroidism (consider surgery); LOW (low Ca/Cr clearance ratio) → FHH (do NOT operate). PTH alone cannot separate them.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c14" data-cid="c14">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c14">
+      <textarea id="note-ta-c14" data-cid="c14" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c14"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c15" data-correct="3"
+     data-fc-front="Hypercalcemia With a Rapid Course" data-fc-back="Answer: Elevated PTH-related peptide (PTHrP)">
+  <div class="vignette">A 64-year-old man with a 40-pack-year smoking history and recent weight loss is admitted with confusion and a calcium of 14.2 mg/dL. Phosphate is low. Intact PTH is suppressed. He has no bone pain, and a skeletal survey shows no lytic lesions. A chest mass is noted on imaging.</div>
+  <div class="question">❓ Which of the following laboratory findings would best confirm the most likely mechanism of his hypercalcemia?</div>
+  <div class="options" id="opts-c15">
+<div class="opt" data-cid="c15" data-idx="0"><div class="key">A</div><div>Elevated intact PTH</div></div>
+<div class="opt" data-cid="c15" data-idx="1"><div class="key">B</div><div>Elevated serum protein gap with monoclonal spike</div></div>
+<div class="opt" data-cid="c15" data-idx="2"><div class="key">C</div><div>Elevated 25-hydroxyvitamin D</div></div>
+<div class="opt" data-cid="c15" data-idx="3"><div class="key">D</div><div>Elevated PTH-related peptide (PTHrP)</div></div>
+<div class="opt" data-cid="c15" data-idx="4"><div class="key">E</div><div>Elevated 1,25-dihydroxyvitamin D</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c15" data-cid="c15" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c15">↺ Reset</button>
+  </div>
+  <div id="c15" class="answer">
+    <div class="exhead" id="exhead-c15"></div>
+    <div class="exrows" id="exrows-c15">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>An elevated PTH would indicate primary hyperparathyroidism, but his PTH is suppressed.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>A monoclonal spike suggests myeloma (which causes hypercalcemia via osteolysis), but he has no lytic lesions and has a lung mass—PTHrP is the better fit.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Elevated 25-hydroxyvitamin D indicates vitamin D intake/intoxication, not a paraneoplastic process.</div></div>
+<div class="exrow r" data-idx="3"><div class="lab">D</div><div>Correct. Hypercalcemia with a SUPPRESSED PTH, low phosphate, no lytic lesions, and a lung mass in a heavy smoker points to humoral hypercalcemia of malignancy from PTHrP (classically squamous cell lung carcinoma). An elevated PTHrP confirms the mechanism. PTHrP mimics PTH at the receptor (raising calcium, lowering phosphate) but is measured separately and suppresses native PTH.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Elevated 1,25-dihydroxyvitamin D characterizes granulomatous disease or lymphoma-mediated hypercalcemia, not the PTHrP mechanism suggested by the lung mass.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Mechanisms of tumor hypercalcemia</div><div>Malignancy raises calcium by several routes: humoral hypercalcemia via PTHrP (classically squamous cell lung carcinoma and renal cell carcinoma), osteolytic bone metastases, and tumor activation of 1,25-dihydroxyvitamin D (lymphoma). In all of these, native PTH is SUPPRESSED—distinguishing them from primary hyperparathyroidism.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; Hypercalcemia of malignancy is an emergency</div><div>Severe hypercalcemia causes lethargy, dehydration, and can progress to coma. Treat with aggressive IV isotonic saline FIRST (volume repletion), then a bisphosphonate ± calcitonin. A SUPPRESSED PTH with elevated PTHrP localizes the cause to a tumor.</div></div>
+    <svg class="infographic-svg" viewBox="0 0 520 195" role="img" aria-label="Calcium and PTH interpretation">
+  <rect x="0" y="0" width="520" height="195" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">Hypercalcemia — Read the PTH</text>
+  <rect x="20" y="34" width="232" height="68" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="32" y="54" font-size="11" font-weight="bold" fill="#c0392b">High Ca + HIGH/normal PTH</text>
+  <text x="32" y="72" font-size="10" fill="#1f2d3a">Primary hyperparathyroidism</text>
+  <text x="32" y="88" font-size="9.5" fill="#5b6b7a">Low phosphate; adenoma; stones/bones</text>
+  <rect x="268" y="34" width="232" height="68" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="280" y="54" font-size="11" font-weight="bold" fill="#15598f">High Ca + LOW (suppressed) PTH</text>
+  <text x="280" y="72" font-size="10" fill="#1f2d3a">Malignancy (PTHrP), vitamin D excess</text>
+  <text x="280" y="88" font-size="9.5" fill="#5b6b7a">Sarcoid ↑ 1,25-vit D; myeloma; mets</text>
+  <rect x="20" y="110" width="480" height="72" rx="6" fill="#e7f6ec" stroke="#1f8a4c"/>
+  <text x="32" y="130" font-size="11" font-weight="bold" fill="#1f8a4c">Low calcium</text>
+  <text x="32" y="148" font-size="10" fill="#1f2d3a">High PTH → CKD (high phosphate), vitamin D deficiency</text>
+  <text x="32" y="164" font-size="10" fill="#1f2d3a">LOW PTH → hypoparathyroidism (e.g., post-thyroidectomy)</text>
+  <text x="32" y="178" font-size="9.5" fill="#5b6b7a">Refractory low Ca + low K → check magnesium</text>
+</svg>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Hypercalcemia + suppressed PTH + low phosphate + lung mass → humoral hypercalcemia of malignancy (PTHrP, classically squamous cell lung cancer). Confirm with elevated PTHrP. Other tumor mechanisms: 1,25-vitamin D (lymphoma/granuloma) and osteolysis (myeloma, mets). Treat: IV saline then bisphosphonate.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c15" data-cid="c15">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c15">
+      <textarea id="note-ta-c15" data-cid="c15" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c15"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c16" data-correct="0"
+     data-fc-front="Post-operative Shock With a Key History [Case 1 of 2]" data-fc-back="Answer: Inadequate cortisol response from a suppressed hypothalamic-pituitary-adrenal axis">
+  <div class="vignette">A 47-year-old man with rheumatoid arthritis on long-term prednisone (recently self-tapered) undergoes urgent incarcerated-hernia repair. On postoperative day 1 he becomes confused and hypotensive (80/46 mm Hg). He receives 3 liters of isotonic fluid and a fluid challenge without improvement. He is afebrile; cultures are pending. Sodium is 131 mEq/L, potassium 4.6 mEq/L, and glucose is 62 mg/dL.
+
+This is the first of two linked questions about the same patient.</div>
+  <div class="question">❓ Which of the following best explains his fluid-refractory hypotension?</div>
+  <div class="options" id="opts-c16">
+<div class="opt" data-cid="c16" data-idx="0"><div class="key">A</div><div>Inadequate cortisol response from a suppressed hypothalamic-pituitary-adrenal axis</div></div>
+<div class="opt" data-cid="c16" data-idx="1"><div class="key">B</div><div>Cardiogenic shock from perioperative myocardial infarction</div></div>
+<div class="opt" data-cid="c16" data-idx="2"><div class="key">C</div><div>Distributive shock from intra-abdominal sepsis</div></div>
+<div class="opt" data-cid="c16" data-idx="3"><div class="key">D</div><div>Hypovolemia from inadequate fluid resuscitation</div></div>
+<div class="opt" data-cid="c16" data-idx="4"><div class="key">E</div><div>Anaphylaxis to a perioperative antibiotic</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c16" data-cid="c16" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c16">↺ Reset</button>
+  </div>
+  <div id="c16" class="answer">
+    <div class="exhead" id="exhead-c16"></div>
+    <div class="exrows" id="exrows-c16">
+<div class="exrow r" data-idx="0"><div class="lab">A</div><div>Correct. Chronic glucocorticoids suppress the HPA axis and atrophy the adrenal cortex; an abrupt taper plus the stress of surgery produces an inadequate cortisol response—acute (secondary) adrenal insufficiency. The clues are fluid-refractory hypotension, confusion, mild hyponatremia, and hypoglycemia in a steroid-dependent patient. (Potassium is often normal in SECONDARY insufficiency because aldosterone is preserved.)</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>There is no evidence of pump failure or ischemia to indicate cardiogenic shock.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Sepsis is possible but he is afebrile with pending cultures, and the steroid history with fluid-refractory shock and hypoglycemia points to adrenal insufficiency as the best explanation.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>He has received substantial fluids without response, arguing against simple hypovolemia.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Anaphylaxis presents intraoperatively with urticaria/bronchospasm, not POD1 fluid-refractory shock with hypoglycemia.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Why chronic steroids set up the crisis</div><div>Chronic exogenous glucocorticoids suppress the hypothalamic-pituitary-adrenal axis and atrophy the adrenal cortex. A major stressor (surgery, infection) then demands a cortisol surge the suppressed axis cannot produce, causing acute adrenal insufficiency. Prevention is stress-dose steroid coverage around surgery and illness; meningococcemia (Waterhouse-Friderichsen) is another classic precipitant of acute adrenal failure.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; Adrenal crisis: treat before you test</div><div>In a steroid-dependent patient who decompensates under stress with fluid-refractory hypotension and confusion, give IV hydrocortisone immediately along with fluids and glucose/electrolyte correction—do not delay for confirmatory cortisol/ACTH results.</div></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Steroid-dependent patient + surgical stress + abrupt taper → acute adrenal insufficiency: fluid-refractory hypotension, confusion, hyponatremia, hypoglycemia. Secondary (steroid-induced) insufficiency usually has NORMAL potassium (aldosterone preserved), unlike primary Addison disease.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c16" data-cid="c16">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c16">
+      <textarea id="note-ta-c16" data-cid="c16" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c16"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c17" data-correct="3"
+     data-fc-front="Acting Before the Result Returns [Case 2 of 2]" data-fc-back="Answer: Administer IV hydrocortisone without waiting for the cortisol result">
+  <div class="vignette">For the same patient, you suspect acute adrenal insufficiency. A random cortisol and ACTH are drawn and sent. He remains hypotensive and confused; results will take hours.</div>
+  <div class="question">❓ Which of the following is the most appropriate immediate action?</div>
+  <div class="options" id="opts-c17">
+<div class="opt" data-cid="c17" data-idx="0"><div class="key">A</div><div>Perform a cosyntropin stimulation test and treat only if abnormal</div></div>
+<div class="opt" data-cid="c17" data-idx="1"><div class="key">B</div><div>Withhold steroids until the random cortisol confirms the diagnosis</div></div>
+<div class="opt" data-cid="c17" data-idx="2"><div class="key">C</div><div>Give oral fludrocortisone and continue fluids</div></div>
+<div class="opt" data-cid="c17" data-idx="3"><div class="key">D</div><div>Administer IV hydrocortisone without waiting for the cortisol result</div></div>
+<div class="opt" data-cid="c17" data-idx="4"><div class="key">E</div><div>Start a norepinephrine infusion as the sole intervention</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c17" data-cid="c17" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c17">↺ Reset</button>
+  </div>
+  <div id="c17" class="answer">
+    <div class="exhead" id="exhead-c17"></div>
+    <div class="exrows" id="exrows-c17">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Although a cosyntropin stimulation test is the confirmatory study, delaying treatment to perform/interpret it is unsafe in crisis; treat empirically and confirm later (dexamethasone can be used if you must test during treatment).</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Withholding steroids pending confirmation can be fatal.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Oral fludrocortisone is too slow and is for chronic mineralocorticoid replacement, not acute crisis.</div></div>
+<div class="exrow r" data-idx="3"><div class="lab">D</div><div>Correct. Acute adrenal insufficiency is immediately life-threatening, so empiric IV hydrocortisone is given at once along with fluids and dextrose—drawing a cortisol/ACTH first is reasonable but treatment must NOT wait for results. Stress-dose hydrocortisone also provides adequate mineralocorticoid effect acutely.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Vasopressors may support pressure transiently but do not replace the missing cortisol; glucocorticoid is essential.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Stress-dosing and replacement</div><div>Acute adrenal crisis is treated with IV hydrocortisone (which at stress doses also covers mineralocorticoid needs), aggressive fluids, and correction of hypoglycemia and electrolytes. Chronic primary adrenal insufficiency requires BOTH a glucocorticoid and a mineralocorticoid (fludrocortisone); steroid-dependent patients need increased ('stress-dose') glucocorticoid around surgery, trauma, or significant illness to prevent crisis.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Adrenal insufficiency: primary vs secondary</caption><thead><tr><th>Feature</th><th>Primary (Addison)</th><th>Secondary/Adrenal crisis from steroids</th></tr></thead><tbody><tr><td>ACTH</td><td>HIGH (hyperpigmentation)</td><td>Low</td></tr><tr><td>Aldosterone</td><td>Low (hyperkalemia, salt-wasting)</td><td>Usually preserved</td></tr><tr><td>Sodium/Potassium</td><td>↓Na, ↑K</td><td>↓Na, K often normal</td></tr><tr><td>Acute treatment</td><td>IV hydrocortisone + fluids</td><td>IV hydrocortisone + fluids</td></tr></tbody></table></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Adrenal crisis: give IV hydrocortisone immediately + fluids + dextrose—do NOT wait for cortisol/ACTH or a stimulation test. Draw labs if quick, but treatment comes first. Provide stress-dose steroids around surgery/illness in steroid-dependent patients to prevent crisis.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c17" data-cid="c17">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c17">
+      <textarea id="note-ta-c17" data-cid="c17" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c17"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c18" data-correct="2"
+     data-fc-front="Spells, Hypertension, and a Pre-operative Sequence" data-fc-back="Answer: Unopposed alpha-adrenergic vasoconstriction can precipitate a hypertensive crisis">
+  <div class="vignette">A 45-year-old woman has paroxysms of pounding headache, palpitations, and diaphoresis with blood pressures up to 210/120 mm Hg between normal readings. Plasma free metanephrines are markedly elevated and abdominal imaging shows a 5-cm adrenal mass. Surgery is planned. A colleague suggests starting metoprolol today to control her tachycardia.</div>
+  <div class="question">❓ Why is starting a beta-blocker first the wrong initial step in her preoperative preparation?</div>
+  <div class="options" id="opts-c18">
+<div class="opt" data-cid="c18" data-idx="0"><div class="key">A</div><div>Beta-blockers blunt the metanephrine assay and obscure monitoring</div></div>
+<div class="opt" data-cid="c18" data-idx="1"><div class="key">B</div><div>Beta-blockers cause reflex bradycardia that lowers tumor perfusion</div></div>
+<div class="opt" data-cid="c18" data-idx="2"><div class="key">C</div><div>Unopposed alpha-adrenergic vasoconstriction can precipitate a hypertensive crisis</div></div>
+<div class="opt" data-cid="c18" data-idx="3"><div class="key">D</div><div>Beta-blockers cause the tumor to enlarge before surgery</div></div>
+<div class="opt" data-cid="c18" data-idx="4"><div class="key">E</div><div>Beta-blockers worsen catecholamine synthesis by the tumor</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c18" data-cid="c18" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c18">↺ Reset</button>
+  </div>
+  <div id="c18" class="answer">
+    <div class="exhead" id="exhead-c18"></div>
+    <div class="exrows" id="exrows-c18">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Beta-blockers do not interfere with the metanephrine assay.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>The danger is unopposed alpha vasoconstriction/hypertensive crisis, not reduced tumor perfusion.</div></div>
+<div class="exrow r" data-idx="2"><div class="lab">C</div><div>Correct. In pheochromocytoma, catecholamines act on both alpha (vasoconstriction) and beta (vasodilation/heart rate) receptors. Blocking beta first removes beta-2–mediated vasodilation and leaves alpha-mediated vasoconstriction UNOPPOSED, which can precipitate a severe hypertensive crisis. The correct sequence is adequate ALPHA-blockade (e.g., phenoxybenzamine) with volume expansion FIRST, then add a beta-blocker, then resect.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Beta-blockers do not change tumor size.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Beta-blockers do not increase catecholamine synthesis.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Diagnosis and the MEN link</div><div>Diagnose pheochromocytoma with plasma free metanephrines or 24-hour urine metanephrines/catecholamines, then localize with abdominal imaging. Episodic headache, palpitations, and sweating with hypertension are the classic triad. Consider MEN 2 (with medullary thyroid carcinoma) and other hereditary syndromes (von Hippel-Lindau, neurofibromatosis), especially in younger or bilateral cases.</div></div>
+    <div class="danger-box"><div class="danger-box-title">&#9888; Pheochromocytoma: alpha-block BEFORE beta-block</div><div>Always establish alpha-blockade (e.g., phenoxybenzamine) and volume-expand before adding a beta-blocker. Beta-blockade first leaves alpha-mediated vasoconstriction unopposed and can trigger a hypertensive crisis. Resect only after adequate medical preparation.</div></div>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Pheochromocytoma prep: ALPHA-block first (phenoxybenzamine) + volume expansion, THEN beta-block, THEN resect. Beta-blockade first leaves alpha-mediated vasoconstriction unopposed → hypertensive crisis. Diagnose with plasma/urine metanephrines; consider MEN2, VHL, NF1.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c18" data-cid="c18">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c18">
+      <textarea id="note-ta-c18" data-cid="c18" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c18"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c19" data-correct="3"
+     data-fc-front="Galactorrhea With a Confounding Medication" data-fc-back="Answer: Attribute the hyperprolactinemia to risperidone and coordinate a medication review with ps">
+  <div class="vignette">A 32-year-old woman has 6 months of amenorrhea and galactorrhea. Pregnancy test is negative. Serum prolactin is 95 ng/mL. She takes risperidone for schizoaffective disorder. TSH is normal. Pituitary MRI shows no adenoma. Her psychiatrist is reluctant to change her antipsychotic.</div>
+  <div class="question">❓ Which of the following is the most appropriate next step?</div>
+  <div class="options" id="opts-c19">
+<div class="opt" data-cid="c19" data-idx="0"><div class="key">A</div><div>Start cabergoline to lower the prolactin</div></div>
+<div class="opt" data-cid="c19" data-idx="1"><div class="key">B</div><div>Order an insulin tolerance test</div></div>
+<div class="opt" data-cid="c19" data-idx="2"><div class="key">C</div><div>Refer for transsphenoidal surgery</div></div>
+<div class="opt" data-cid="c19" data-idx="3"><div class="key">D</div><div>Attribute the hyperprolactinemia to risperidone and coordinate a medication review with psychiatry</div></div>
+<div class="opt" data-cid="c19" data-idx="4"><div class="key">E</div><div>Begin pituitary irradiation</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c19" data-cid="c19" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c19">↺ Reset</button>
+  </div>
+  <div id="c19" class="answer">
+    <div class="exhead" id="exhead-c19"></div>
+    <div class="exrows" id="exrows-c19">
+<div class="exrow w" data-idx="0"><div class="lab">A</div><div>Adding cabergoline (a dopamine agonist) to treat antipsychotic-induced hyperprolactinemia can worsen psychosis and is generally avoided; address the offending drug first.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>An insulin tolerance test evaluates GH/ACTH reserve and is irrelevant here.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Surgery is for adenomas failing medical therapy; there is no tumor here.</div></div>
+<div class="exrow r" data-idx="3"><div class="lab">D</div><div>Correct. Risperidone is a potent dopamine antagonist and a common cause of moderate hyperprolactinemia; with a NORMAL MRI (no adenoma) and a clear drug cause, the appropriate step is to attribute the prolactin elevation to the medication and coordinate with psychiatry about switching to a prolactin-sparing agent (e.g., aripiprazole) if clinically feasible—not to start a dopamine agonist.</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Irradiation is not indicated without a tumor.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Prolactinoma management</div><div>A symptomatic prolactinoma is treated medically first with a dopamine agonist (cabergoline preferred over bromocriptine), which lowers prolactin, restores fertility/gonadal function, and shrinks the tumor—even macroadenomas. Surgery (transsphenoidal) is reserved for medication failure/intolerance or specific compressive emergencies. Always exclude physiologic and secondary hyperprolactinemia first: pregnancy, primary hypothyroidism (high TRH drives prolactin), and dopamine-blocking drugs (antipsychotics, metoclopramide).</div></div>
+    <svg class="infographic-svg" viewBox="0 0 520 165" role="img" aria-label="ADH disorders">
+  <rect x="0" y="0" width="520" height="165" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">ADH (Water Balance) Disorders</text>
+  <rect x="20" y="34" width="232" height="120" rx="6" fill="#fdf0d5" stroke="#d9920a"/>
+  <text x="32" y="54" font-size="11" font-weight="bold" fill="#b9760a">Too little ADH effect = DI</text>
+  <text x="32" y="74" font-size="10" fill="#1f2d3a">Polyuria, dilute urine, HIGH serum Na</text>
+  <text x="32" y="92" font-size="10" fill="#1f2d3a">Central: ↓ADH → responds to DDAVP</text>
+  <text x="32" y="110" font-size="10" fill="#1f2d3a">Nephrogenic: ADH-resistant (lithium)</text>
+  <text x="32" y="132" font-size="9.5" fill="#5b6b7a">Nephrogenic → thiazide; no DDAVP response</text>
+  <rect x="268" y="34" width="232" height="120" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="280" y="54" font-size="11" font-weight="bold" fill="#15598f">Too much ADH = SIADH</text>
+  <text x="280" y="74" font-size="10" fill="#1f2d3a">LOW serum Na, low serum osmolality</text>
+  <text x="280" y="92" font-size="10" fill="#1f2d3a">Concentrated urine (high urine osm/Na)</text>
+  <text x="280" y="110" font-size="10" fill="#1f2d3a">Causes: small cell lung CA, CNS, drugs</text>
+  <text x="280" y="132" font-size="9.5" fill="#5b6b7a">Treat: fluid restriction ± vaptan</text>
+</svg>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Before diagnosing a prolactinoma, exclude physiologic and secondary causes: pregnancy, primary hypothyroidism (high TRH), renal failure, and DOPAMINE-ANTAGONIST drugs (antipsychotics, metoclopramide). Drug-induced hyperprolactinemia with a normal MRI → adjust the drug, don&#x27;t add a dopamine agonist.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c19" data-cid="c19">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c19">
+      <textarea id="note-ta-c19" data-cid="c19" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c19"></div>
+    </div>
+  </div>
+</div>
+<div class="concept" id="screen-c20" data-correct="0"
+     data-fc-front="Postpartum Fatigue and Multiple Hormone Clues" data-fc-back="Answer: A low free T4 with a non-elevated (inappropriately normal) TSH">
+  <div class="vignette">A 33-year-old woman is seen 7 weeks after a delivery complicated by severe hemorrhage and hypotension requiring transfusion. She reports fatigue, anorexia, lightheadedness on standing, cold intolerance, and an inability to breastfeed. Labs: sodium 129 mEq/L, free T4 low, TSH 1.1 µU/mL (not elevated), and an 8 a.m. cortisol that is low.</div>
+  <div class="question">❓ Which laboratory feature most specifically points to a pituitary rather than a primary end-organ cause of her hypothyroidism?</div>
+  <div class="options" id="opts-c20">
+<div class="opt" data-cid="c20" data-idx="0"><div class="key">A</div><div>A low free T4 with a non-elevated (inappropriately normal) TSH</div></div>
+<div class="opt" data-cid="c20" data-idx="1"><div class="key">B</div><div>The cold intolerance and fatigue</div></div>
+<div class="opt" data-cid="c20" data-idx="2"><div class="key">C</div><div>The low serum sodium</div></div>
+<div class="opt" data-cid="c20" data-idx="3"><div class="key">D</div><div>The low morning cortisol</div></div>
+<div class="opt" data-cid="c20" data-idx="4"><div class="key">E</div><div>The inability to breastfeed</div></div>
+  </div>
+  <div class="submit-row">
+    <button class="submit-btn" id="submit-c20" data-cid="c20" disabled>Submit</button>
+    <button class="qreset-btn" data-cid="c20">↺ Reset</button>
+  </div>
+  <div id="c20" class="answer">
+    <div class="exhead" id="exhead-c20"></div>
+    <div class="exrows" id="exrows-c20">
+<div class="exrow r" data-idx="0"><div class="lab">A</div><div>Correct. In PRIMARY hypothyroidism the failing thyroid drives TSH UP. Here free T4 is low but TSH is NOT elevated (inappropriately normal), indicating the pituitary is not responding—i.e., CENTRAL hypothyroidism. Combined with lactation failure and secondary adrenal insufficiency after postpartum hemorrhage, this indicates Sheehan syndrome (pituitary infarction). The low-T4/low-or-normal-TSH mismatch is the specific pituitary clue.</div></div>
+<div class="exrow w" data-idx="1"><div class="lab">B</div><div>Cold intolerance and fatigue are nonspecific hypothyroid symptoms.</div></div>
+<div class="exrow w" data-idx="2"><div class="lab">C</div><div>Low sodium can occur from cortisol deficiency or hypothyroidism but is nonspecific to a pituitary cause.</div></div>
+<div class="exrow w" data-idx="3"><div class="lab">D</div><div>Low cortisol indicates adrenal insufficiency but, by itself, does not localize to the pituitary (could be primary adrenal).</div></div>
+<div class="exrow w" data-idx="4"><div class="lab">E</div><div>Lactation failure suggests low prolactin and supports Sheehan, but the most SPECIFIC localizing lab for the hypothyroidism axis is the low T4 with non-elevated TSH.</div></div>
+    </div>
+    <div class="teaching-point"><div class="teaching-point-title">Sheehan and the broader pituitary picture</div><div>Sheehan syndrome is postpartum pituitary infarction after major obstetric hemorrhage, producing panhypopituitarism: failure to lactate (low prolactin), central hypothyroidism (low T4 with low/normal TSH), and secondary adrenal insufficiency (low ACTH/cortisol), sometimes with diabetes insipidus. Replace the deficient hormones—glucocorticoid first if adrenal insufficiency is suspected, then levothyroxine—and remember that pituitary mass effects (e.g., a macroprolactinoma or other adenoma) can also cause multi-axis hypopituitarism.</div></div>
+    <div class="table-container"><table><caption class="ig-note ig-note-blue">Pituitary/ADH and tumor one-liners</caption><thead><tr><th>Entity</th><th>Hallmark</th></tr></thead><tbody><tr><td>Acromegaly</td><td>↑IGF-1; confirm with oral glucose suppression (GH fails to suppress)</td></tr><tr><td>Carcinoid syndrome</td><td>Flushing + diarrhea + right-heart lesions; urine 5-HIAA; octreotide</td></tr><tr><td>VIPoma</td><td>Watery diarrhea, hypokalemia, achlorhydria (WDHA); octreotide</td></tr><tr><td>Medullary thyroid CA</td><td>Parafollicular C cells → calcitonin; MEN2 (RET)</td></tr><tr><td>Sheehan syndrome</td><td>Postpartum hemorrhage → panhypopituitarism (no lactation)</td></tr></tbody></table></div>
+    <svg class="infographic-svg" viewBox="0 0 520 185" role="img" aria-label="MEN syndromes">
+  <rect x="0" y="0" width="520" height="185" fill="#f8fbff"/>
+  <text x="10" y="22" font-size="13" font-weight="bold" fill="#15598f">MEN Syndromes (RET except MEN1)</text>
+  <rect x="20" y="34" width="150" height="140" rx="6" fill="#e7eefb" stroke="#1d6fb8"/>
+  <text x="32" y="54" font-size="11" font-weight="bold" fill="#15598f">MEN 1 (3 P's)</text>
+  <text x="32" y="76" font-size="10" fill="#1f2d3a">Parathyroid</text>
+  <text x="32" y="94" font-size="10" fill="#1f2d3a">Pancreas (gastrinoma)</text>
+  <text x="32" y="112" font-size="10" fill="#1f2d3a">Pituitary</text>
+  <text x="32" y="140" font-size="9" fill="#5b6b7a">MEN1 (menin) gene</text>
+  <rect x="185" y="34" width="150" height="140" rx="6" fill="#fdf0d5" stroke="#d9920a"/>
+  <text x="197" y="54" font-size="11" font-weight="bold" fill="#b9760a">MEN 2A</text>
+  <text x="197" y="76" font-size="10" fill="#1f2d3a">Medullary thyroid CA</text>
+  <text x="197" y="94" font-size="10" fill="#1f2d3a">Pheochromocytoma</text>
+  <text x="197" y="112" font-size="10" fill="#1f2d3a">Parathyroid hyperplasia</text>
+  <text x="197" y="140" font-size="9" fill="#5b6b7a">RET proto-oncogene</text>
+  <rect x="350" y="34" width="150" height="140" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="362" y="54" font-size="11" font-weight="bold" fill="#c0392b">MEN 2B</text>
+  <text x="362" y="76" font-size="10" fill="#1f2d3a">Medullary thyroid CA</text>
+  <text x="362" y="94" font-size="10" fill="#1f2d3a">Pheochromocytoma</text>
+  <text x="362" y="112" font-size="10" fill="#1f2d3a">Mucosal neuromas</text>
+  <text x="362" y="130" font-size="10" fill="#1f2d3a">Marfanoid habitus</text>
+  <text x="362" y="150" font-size="9" fill="#5b6b7a">RET; no parathyroid</text>
+</svg>
+    <div class="pearl"><strong>USMLE Pearl:</strong> Central (pituitary) hypothyroidism: LOW free T4 with a LOW or inappropriately NORMAL TSH (no compensatory rise). After postpartum hemorrhage with lactation failure + secondary adrenal insufficiency + central hypothyroidism → Sheehan syndrome. Replace glucocorticoid before levothyroxine.</div>
+    <div class="tools-row">
+      <button class="note-btn" id="note-btn-c20" data-cid="c20">Add Note</button>
+    </div>
+    <div class="note-area" id="note-area-c20">
+      <textarea id="note-ta-c20" data-cid="c20" placeholder="Your notes for this question..."></textarea>
+      <div class="note-saved" id="note-saved-c20"></div>
+    </div>
+  </div>
+</div>
+
+    <div class="footnav">
+      <button class="btn btn-ghost" id="prevBtn">‹ Previous</button>
+      <span style="color:var(--muted);font-size:13px" id="counter">1 / 20</span>
+      <button class="btn btn-ghost" id="nextBtn">Next ›</button>
+    </div>
+  </main>
+</div>
+
+<div class="modal" id="fcModal"><div class="sheet">
+  <div class="sheet-head">Flashcards <button class="x" id="fcClose">×</button></div>
+  <div class="sheet-body">
+    <div class="fc-meta" id="fcMeta"></div>
+    <div class="fc" id="fcCard"><div class="fc-inner">
+      <div class="fc-face fc-front" id="fcFront"></div>
+      <div class="fc-face fc-back" id="fcBack"></div>
+    </div></div>
+    <div class="fc-nav">
+      <button class="btn btn-ghost" id="fcPrev">‹ Prev</button>
+      <button class="btn btn-ghost" id="fcFlip">Flip</button>
+      <button class="btn btn-ghost" id="fcNext">Next ›</button>
+    </div>
+    <div class="fc-tools">
+      <button class="btn btn-ghost" id="fcFromQ">★ Make card from this question</button>
+      <button class="btn btn-ghost" id="fcNewToggle">✎ Write my own card</button>
+      <button class="btn btn-ghost" id="fcDelete">🗑 Delete this custom card</button>
+    </div>
+    <div class="fc-editor" id="fcEditor">
+      <input type="text" id="fcNewFront" placeholder="Front (question / prompt)">
+      <textarea id="fcNewBack" placeholder="Back (answer / explanation)"></textarea>
+      <button class="btn btn-ghost" id="fcSave">Save card</button>
+      <div class="fc-tag">Your custom cards are saved in this file and included when you export.</div>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal" id="wbModal"><div class="sheet">
+  <div class="sheet-head">✏️ Whiteboard <span id="wbWhich" class="wb-which"></span> <button class="x" id="wbClose">×</button></div>
+  <div class="sheet-body">
+    <div class="wb-toolbar">
+      <button class="wb-btn active" data-tool="pen">✏️ Pen</button>
+      <button class="wb-btn" data-tool="eraser">⬜ Erase</button>
+      <div class="wb-sep"></div>
+      <div class="wb-colors">
+        <div class="wb-color active" data-color="#1e293b" style="background:#1e293b"></div>
+        <div class="wb-color" data-color="#dc2626" style="background:#dc2626"></div>
+        <div class="wb-color" data-color="#1d4ed8" style="background:#1d4ed8"></div>
+        <div class="wb-color" data-color="#16a34a" style="background:#16a34a"></div>
+        <div class="wb-color" data-color="#d97706" style="background:#d97706"></div>
+        <div class="wb-color" data-color="#db2777" style="background:#db2777"></div>
+      </div>
+      <div class="wb-sep"></div>
+      <div class="wb-sizes">
+        <button class="wb-sz active" data-size="S">S</button>
+        <button class="wb-sz" data-size="M">M</button>
+        <button class="wb-sz" data-size="L">L</button>
+      </div>
+      <div class="wb-sep"></div>
+      <button class="wb-btn" data-action="undo">↩ Undo</button>
+      <button class="wb-btn" data-action="clear">🗑 Clear</button>
+      <div class="wb-sep"></div>
+      <button class="wb-btn" id="wbZoomOut" title="Zoom out">➖</button>
+      <span id="wbZoomLabel" class="wb-zoom-label">100%</span>
+      <button class="wb-btn" id="wbZoomIn" title="Zoom in">➕</button>
+      <button class="wb-btn" id="wbZoomReset" title="Reset zoom">Fit</button>
+    </div>
+    <div class="wb-canvas-wrap" id="wbCanvasWrap"><canvas class="wb-canvas" id="wbCanvas"></canvas></div>
+    <div class="wb-hint">Each question keeps its own board — drawings are saved automatically. Use ➕ / ➖ to zoom; scroll to pan when zoomed in.</div>
+  </div>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* SESSION IDENTITY — unique per session, generated once at creation.
+     New session = new ID = new localStorage namespace = no bleed between sessions. */
+  var SESSION_ID = "step3_endo_f9195d";
+  var NOTES_KEY  = SESSION_ID + "_notes";
+  var WB_KEY     = SESSION_ID + "_wb";
+
+  /* INITIAL_DATA is {} in a live session.
+     The export function rewrites this line with embedded annotations.
+     Populated + exported:true = snapshot mode (in-memory only, never touches localStorage). */
+  var INITIAL_DATA = {}; /* __EXPORT_MARKER__ */
+  var IS_SNAPSHOT = !!(INITIAL_DATA && INITIAL_DATA.exported);
+
+  var STATE = { notes:{}, whiteboards:{} };
+
+  if (IS_SNAPSHOT) {
+    STATE.notes       = INITIAL_DATA.notes       || {};
+    STATE.whiteboards = INITIAL_DATA.whiteboards || {};
+    var banner = document.getElementById("snapshotBanner");
+    if (banner) banner.style.display = "block";
+  } else {
+    try { STATE.notes       = JSON.parse(localStorage.getItem(NOTES_KEY) || "{}"); } catch(e){}
+    try { STATE.whiteboards = JSON.parse(localStorage.getItem(WB_KEY)    || "{}"); } catch(e){}
+  }
+
+  STATE.customCards = IS_SNAPSHOT ? (INITIAL_DATA.customCards||[])
+                                  : (function(){ try { return JSON.parse(localStorage.getItem(SESSION_ID+"_cards")||"[]"); } catch(e){ return []; } })();
+
+  function persistNotes(){ if (!IS_SNAPSHOT) try { localStorage.setItem(NOTES_KEY, JSON.stringify(STATE.notes)); } catch(e){} }
+  function persistWB()   { if (!IS_SNAPSHOT) try { localStorage.setItem(WB_KEY,    JSON.stringify(STATE.whiteboards)); } catch(e){} }
+
+  /* ── REVEAL ── */
+  function wireReveal(){
+    var btns = document.querySelectorAll(".reveal-btn");
+    for (var i=0; i<btns.length; i++){
+      btns[i].addEventListener("click", function(){
+        var id  = this.getAttribute("data-target");
+        var ans = document.getElementById(id);
+        if (!ans) return;
+        if (ans.style.display === "none" || ans.style.display === ""){
+          ans.style.display = "block";
+          this.textContent  = "Hide Answer";
+          ensureCanvas(id);
+        } else {
+          ans.style.display = "none";
+          this.textContent  = "Show Answer";
+        }
+      });
+    }
+  }
+
+  /* ── NOTES ── */
+  function updateNoteCount(){
+    var n=0, k;
+    for (k in STATE.notes){ if (STATE.notes[k] && STATE.notes[k].trim()) n++; }
+    var el = document.getElementById("noteCount");
+    if (el) el.textContent = "\uD83D\uDCDD " + n + " note" + (n===1?"":"s");
+  }
+  function wireNotes(){
+    var btns = document.querySelectorAll(".note-btn");
+    for (var i=0; i<btns.length; i++){
+      btns[i].addEventListener("click", function(){
+        var cid  = this.getAttribute("data-cid");
+        var area = document.getElementById("note-area-" + cid);
+        if (!area) return;
+        var open = area.classList.toggle("open");
+        this.textContent = open ? "Close Note"
+                                : ((STATE.notes[cid] && STATE.notes[cid].trim()) ? "Edit Note" : "Add Note");
+      });
+    }
+    var tas = document.querySelectorAll("textarea[data-cid]");
+    for (var j=0; j<tas.length; j++){
+      (function(ta){
+        var cid = ta.getAttribute("data-cid");
+        ta.value = STATE.notes[cid] || "";
+        ta.addEventListener("input", function(){
+          STATE.notes[cid] = this.value;
+          persistNotes();
+          var btn   = document.getElementById("note-btn-" + cid);
+          var saved = document.getElementById("note-saved-" + cid);
+          if (btn)   btn.classList.toggle("has-note", this.value.trim().length > 0);
+          if (saved){ saved.textContent = "Saved"; setTimeout(function(){ saved.textContent=""; }, 1200); }
+          updateNoteCount();
+        });
+        var btn = document.getElementById("note-btn-" + cid);
+        if (btn && STATE.notes[cid] && STATE.notes[cid].trim()){
+          btn.classList.add("has-note");
+          btn.textContent = "Edit Note";
+        }
+      })(tas[j]);
+    }
+  }
+
+  /* ── WHITEBOARD ── */
+  var WB_SIZES = { S:2.5, M:6, L:13 };
+  var WB = {};
+
+  /* Size canvas once — called on first reveal (canvas has zero size while hidden) */
+  function ensureCanvas(cid){
+    var canvas = document.getElementById("wbc-" + cid);
+    if (!canvas) return;
+    var rec = WB[cid];
+    if (!rec || rec.sized) return;
+    var dpr  = window.devicePixelRatio || 1;
+    var cssW = canvas.offsetWidth || 600;
+    canvas.width  = cssW * dpr;
+    canvas.height = 320 * dpr;
+    canvas.getContext("2d").scale(dpr, dpr);
+    rec.sized = true;
+    var saved = STATE.whiteboards[cid];
+    if (saved){
+      var img = new Image();
+      img.onload = function(){
+        /* Only restore if the user hasn't drawn new strokes since sizing.
+           Prevents the async onload from overwriting new work. */
+        if (!rec.drawnAfterSize) canvas.getContext("2d").drawImage(img, 0, 0, cssW, 320);
+      };
+      img.src = saved;
+    }
+  }
+
+  function snapshotCanvas(cid){
+    var cv = document.getElementById("wbc-" + cid);
+    if (!cv) return;
+    try { STATE.whiteboards[cid] = cv.toDataURL(); persistWB(); } catch(e){}
+  }
+
+  function pushUndo(cid){
+    var cv = document.getElementById("wbc-" + cid), rec = WB[cid];
+    if (!cv || !rec) return;
+    try { rec.undo.push(cv.getContext("2d").getImageData(0,0,cv.width,cv.height)); if(rec.undo.length>25) rec.undo.shift(); } catch(e){}
+  }
+
+  function wireWB(cid){
+    var wbEl   = document.getElementById("wb-" + cid);
+    var canvas = document.getElementById("wbc-" + cid);
+    if (!wbEl || !canvas) return;
+    WB[cid] = { tool:"pen", color:"#1e293b", size:WB_SIZES.S, sized:false, drawing:false, lastX:0, lastY:0, undo:[] };
+
+    /* tool buttons */
+    wbEl.querySelectorAll(".wb-btn[data-tool]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var c = this.getAttribute("data-cid");
+        WB[c].tool = this.getAttribute("data-tool");
+        document.getElementById("wb-"+c).querySelectorAll(".wb-btn[data-tool]").forEach(function(b){ b.classList.remove("active"); });
+        this.classList.add("active");
+      });
+    });
+
+    /* color swatches */
+    wbEl.querySelectorAll(".wb-color").forEach(function(sw){
+      sw.addEventListener("click", function(){
+        var c = this.getAttribute("data-cid");
+        WB[c].color = this.getAttribute("data-color");
+        WB[c].tool  = "pen";
+        document.getElementById("wb-"+c).querySelectorAll(".wb-btn[data-tool]").forEach(function(b){
+          b.classList.toggle("active", b.getAttribute("data-tool")==="pen");
+        });
+        document.getElementById("wb-"+c).querySelectorAll(".wb-color").forEach(function(s){ s.classList.remove("active"); });
+        this.classList.add("active");
+      });
+    });
+
+    /* size buttons */
+    wbEl.querySelectorAll(".wb-sz").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var c = this.getAttribute("data-cid");
+        WB[c].size = WB_SIZES[this.getAttribute("data-size")];
+        document.getElementById("wb-"+c).querySelectorAll(".wb-sz").forEach(function(b){ b.classList.remove("active"); });
+        this.classList.add("active");
+      });
+    });
+
+    /* undo / clear */
+    wbEl.querySelectorAll(".wb-btn[data-action]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var c   = this.getAttribute("data-cid");
+        var cv  = document.getElementById("wbc-"+c);
+        var ctx = cv.getContext("2d");
+        if (this.getAttribute("data-action") === "undo"){
+          if (WB[c] && WB[c].undo.length){ ctx.putImageData(WB[c].undo.pop(),0,0); snapshotCanvas(c); }
+        } else {
+          ctx.clearRect(0,0,cv.width,cv.height);
+          if (WB[c]) WB[c].undo = [];
+          delete STATE.whiteboards[c];
+          persistWB();
+        }
+      });
+    });
+
+    /* drawing */
+    function pos(e){ var r=canvas.getBoundingClientRect(), pt=e.touches?e.touches[0]:e; return{x:pt.clientX-r.left,y:pt.clientY-r.top}; }
+    canvas.addEventListener("mousedown",  function(e){ ensureCanvas(cid); pushUndo(cid); WB[cid].drawnAfterSize=true; var p=pos(e); WB[cid].drawing=true; WB[cid].lastX=p.x; WB[cid].lastY=p.y; });
+    canvas.addEventListener("mousemove",  function(e){ var rec=WB[cid]; if(!rec.drawing) return; var p=pos(e),ctx=canvas.getContext("2d"); ctx.beginPath(); ctx.moveTo(rec.lastX,rec.lastY); ctx.lineTo(p.x,p.y); ctx.strokeStyle=rec.tool==="eraser"?"#ffffff":rec.color; ctx.lineWidth=rec.tool==="eraser"?rec.size*5:rec.size; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.stroke(); rec.lastX=p.x; rec.lastY=p.y; });
+    canvas.addEventListener("mouseup",    function(){ if(WB[cid].drawing){WB[cid].drawing=false; snapshotCanvas(cid);} });
+    canvas.addEventListener("mouseleave", function(){ if(WB[cid].drawing){WB[cid].drawing=false; snapshotCanvas(cid);} });
+    canvas.addEventListener("touchstart", function(e){ e.preventDefault(); ensureCanvas(cid); pushUndo(cid); WB[cid].drawnAfterSize=true; var p=pos(e); WB[cid].drawing=true; WB[cid].lastX=p.x; WB[cid].lastY=p.y; },{passive:false});
+    canvas.addEventListener("touchmove",  function(e){ e.preventDefault(); var rec=WB[cid]; if(!rec.drawing) return; var p=pos(e),ctx=canvas.getContext("2d"); ctx.beginPath(); ctx.moveTo(rec.lastX,rec.lastY); ctx.lineTo(p.x,p.y); ctx.strokeStyle=rec.tool==="eraser"?"#ffffff":rec.color; ctx.lineWidth=rec.tool==="eraser"?rec.size*5:rec.size; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.stroke(); rec.lastX=p.x; rec.lastY=p.y; },{passive:false});
+    canvas.addEventListener("touchend",   function(e){ e.preventDefault(); if(WB[cid].drawing){WB[cid].drawing=false; snapshotCanvas(cid);} },{passive:false});
+  }
+
+  /* ── CLEAR ALL ── */
+  function wireClearAll(){
+    var btn = document.getElementById("clearBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function(){
+      if (!confirm("Clear all notes and whiteboard drawings?")) return;
+      STATE.notes={}; STATE.whiteboards={};
+      persistNotes(); persistWB();
+      STATE.customCards=[]; if(typeof persistCards==="function") persistCards(); if(typeof rebuildFC==="function") rebuildFC();
+      document.querySelectorAll("textarea[data-cid]").forEach(function(ta){ ta.value=""; });
+      document.querySelectorAll(".note-btn").forEach(function(b){ b.classList.remove("has-note"); b.textContent="Add Note"; });
+      document.querySelectorAll(".note-area").forEach(function(a){ a.classList.remove("open"); });
+      document.querySelectorAll(".wb-canvas").forEach(function(cv){
+        cv.getContext("2d").clearRect(0,0,cv.width,cv.height);
+        var c=cv.getAttribute("data-cid"); if(WB[c]) WB[c].undo=[];
+      });
+      updateNoteCount();
+    });
+  }
+
+  /* ── EXPORT ──
+     Bakes STATE into the HTML as INITIAL_DATA.
+     Works identically from live session or snapshot (re-export).
+     The .replace(/</g,"\\u003c") prevents <\/script> in JSON from
+     terminating the script tag in the output file. */
+  function wireExport(){
+    var btn = document.getElementById("exportBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".wb-canvas").forEach(function(cv){
+        var c=cv.getAttribute("data-cid");
+        if(WB[c] && WB[c].sized){ try{ var u=cv.toDataURL(); if(u&&u.length>2000) STATE.whiteboards[c]=u; }catch(e){} }
+      });
+      var hasNotes=false, hasWB=false, k;
+      for(k in STATE.notes){ if(STATE.notes[k]&&STATE.notes[k].trim()){hasNotes=true;break;} }
+      for(k in STATE.whiteboards){ if(STATE.whiteboards[k]){hasWB=true;break;} }
+      if(!hasNotes&&!hasWB){ alert("Nothing to export yet \u2014 add a note or draw on a whiteboard first."); return; }
+      if (typeof wbSnapshot==="function") wbSnapshot();
+      var payload = {exported:true, notes:STATE.notes, whiteboards:STATE.whiteboards, customCards:STATE.customCards};
+      var json    = JSON.stringify(payload).replace(/</g,"\\u003c");
+      var html    = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      html = html.replace(
+        /var INITIAL_DATA = [\s\S]*?; \/\* __EXPORT_MARKER__ \*\//,
+        "var INITIAL_DATA = " + json + "; /* __EXPORT_MARKER__ */"
+      );
+      var blob = new Blob([html],{type:"text/html;charset=utf-8"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = SESSION_ID + "_annotated.html";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
+    });
+  }
+
+  /* ── BOOT (Qbank) ── */
+  document.addEventListener("DOMContentLoaded", function(){
+    wireSubmit();          // NBME grading (replaces wireReveal)
+    wireNotes();
+    wireWhiteboardModal(); // single shared pop-up whiteboard
+    wireClearAll();
+    wireExport();          // includes customCards in payload
+    updateNoteCount();
+    wireQbankNav();
+    wireHighlighter();
+    wireFlashcards();
+    qShow(0);
+  });
+
+
+  /* ===================== QBANK UI CONTROLLER ADDITIONS ===================== */
+/* ===== state additions (in the IIFE, alongside notes/whiteboards) ===== */
+var CARDS_KEY = SESSION_ID + "_cards";
+// in setup: STATE.customCards = IS_SNAPSHOT ? (INITIAL_DATA.customCards||[])
+//                                           : JSON.parse(localStorage.getItem(CARDS_KEY)||"[]");
+function persistCards(){ if(!IS_SNAPSHOT) try{ localStorage.setItem(CARDS_KEY, JSON.stringify(STATE.customCards)); }catch(e){} }
+
+/* ===== SAVABLE NOTES (robust; overrides the base wireNotes) =====
+   Notes always live in STATE.notes (in-memory, always works). They persist to
+   localStorage when available, and are ALWAYS included in Export (the reliable
+   "save to a file" path that works even when localStorage is blocked, e.g. in a
+   preview sandbox). A re-wire guard prevents double-binding from breaking the toggle. */
+var NOTES_WIRED=false;
+function wireNotes(){
+  if(NOTES_WIRED) return; NOTES_WIRED=true;
+  document.querySelectorAll(".note-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var cid=this.getAttribute("data-cid"); var area=document.getElementById("note-area-"+cid); if(!area) return;
+      var open=area.classList.toggle("open");
+      this.textContent = open ? "Close Note" : ((STATE.notes[cid]&&STATE.notes[cid].trim())?"Edit Note":"Add Note");
+      if(open){ var ta=document.getElementById("note-ta-"+cid); if(ta) ta.focus(); }
+    });
+  });
+  document.querySelectorAll("textarea[data-cid]").forEach(function(ta){
+    var cid=ta.getAttribute("data-cid");
+    ta.value=STATE.notes[cid]||"";
+    var save=function(){ STATE.notes[cid]=ta.value; persistNotes();
+      var btn=document.getElementById("note-btn-"+cid); var saved=document.getElementById("note-saved-"+cid);
+      if(btn) btn.classList.toggle("has-note", ta.value.trim().length>0);
+      if(saved){ saved.textContent="Saved ✓"; clearTimeout(ta._t); ta._t=setTimeout(function(){ saved.textContent=""; },1200); }
+      updateNoteCount(); };
+    ta.addEventListener("input", save);
+    ta.addEventListener("blur", save);
+    var btn=document.getElementById("note-btn-"+cid);
+    if(btn && STATE.notes[cid] && STATE.notes[cid].trim()){ btn.classList.add("has-note"); btn.textContent="Edit Note"; }
+  });
+}
+
+/* ===== NBME SUBMIT GRADING (replaces wireReveal) ===== */
+var SEL = {};   // selected option index per cid
+function wireSubmit(){
+  document.querySelectorAll(".opt").forEach(function(o){
+    o.addEventListener("click", function(){
+      var cid=this.getAttribute("data-cid");
+      if(document.getElementById("submit-"+cid).disabled && SEEN[cid]) return; // locked after submit
+      if(SEEN[cid]) return;
+      SEL[cid]=parseInt(this.getAttribute("data-idx"),10);
+      document.getElementById("opts-"+cid).querySelectorAll(".opt").forEach(function(x){ x.classList.remove("sel"); });
+      this.classList.add("sel");
+      document.getElementById("submit-"+cid).disabled=false;
+    });
+  });
+  document.querySelectorAll(".submit-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var cid=this.getAttribute("data-cid");
+      if(SEL[cid]==null) return;
+      var screen=document.getElementById("screen-"+cid);
+      var correct=parseInt(screen.getAttribute("data-correct"),10);
+      var opts=document.getElementById("opts-"+cid).querySelectorAll(".opt");
+      var L=["A","B","C","D","E","F"];
+      opts.forEach(function(o,idx){
+        o.classList.add("locked");
+        if(idx===correct) o.classList.add("correct");
+        else if(idx===SEL[cid]) o.classList.add("wrong");
+      });
+      var right=(SEL[cid]===correct);
+      var head=document.getElementById("exhead-"+cid);
+      head.className="exhead"+(right?"":" wrongh");
+      head.textContent=(right?"✓ Correct":"✗ Incorrect")+" — Answer is "+L[correct];
+
+      // UWorld-style ordering: correct explanation first, then the incorrect ones,
+      // each under a small section label. Rows are authored in A–E order with data-idx.
+      var box=document.getElementById("exrows-"+cid);
+      if(box && !box.getAttribute("data-ordered")){
+        var rows=[].slice.call(box.querySelectorAll(".exrow"));
+        var correctRow=null, wrongRows=[];
+        rows.forEach(function(r){ if(parseInt(r.getAttribute("data-idx"),10)===correct) correctRow=r; else wrongRows.push(r); });
+        box.innerHTML="";
+        var h1=document.createElement("div"); h1.className="exsub r"; h1.textContent="Why "+L[correct]+" is correct";
+        box.appendChild(h1); if(correctRow) box.appendChild(correctRow);
+        var h2=document.createElement("div"); h2.className="exsub w"; h2.textContent="Why the other options are wrong";
+        box.appendChild(h2); wrongRows.forEach(function(r){ box.appendChild(r); });
+        box.setAttribute("data-ordered","1");
+      }
+
+      document.getElementById(cid).style.display="block";
+      this.disabled=true;
+      SEEN[cid]=true;
+      buildNav(); updateProgress();
+    });
+  });
+}
+
+/* ===== QBANK CONTROLLER ===== */
+var SCREENS=[].slice.call(document.querySelectorAll(".concept"));
+var IDS=SCREENS.map(function(s){ return s.id.replace("screen-",""); });
+var current=0, MARKS={}, SEEN={};
+
+function qShow(i){
+  current=Math.max(0,Math.min(SCREENS.length-1,i));
+  SCREENS.forEach(function(s,idx){ s.classList.toggle("active",idx===current); });
+  var cid=IDS[current];
+  var qidEl=document.getElementById("qid"); if(qidEl) qidEl.textContent="QID "+(current+1);
+  var counter=document.getElementById("counter"); if(counter) counter.textContent=(current+1)+" / "+SCREENS.length;
+  var prev=document.getElementById("prevBtn"),next=document.getElementById("nextBtn");
+  if(prev) prev.disabled=(current===0); if(next) next.disabled=(current===SCREENS.length-1);
+  document.getElementById("markBtn").classList.toggle("on",!!MARKS[cid]);
+  // item bar
+  var iN=document.getElementById("itemNum"); if(iN) iN.textContent=(current+1);
+  var iT=document.getElementById("itemTotal"); if(iT) iT.textContent=SCREENS.length;
+  var iS=document.getElementById("itemStatus");
+  if(iS){ if(SEEN[cid]){ var sc=document.getElementById("screen-"+cid); var ok=SEL[cid]===parseInt(sc.getAttribute("data-correct"),10);
+      iS.textContent=ok?"Answered — Correct":"Answered — Incorrect"; iS.style.color=ok?"#7ee2a6":"#ff9b8f"; }
+    else { iS.textContent=MARKS[cid]?"Marked for review":"Unanswered"; iS.style.color="#fff"; } }
+  // big left-rail item number (UWorld style)
+  var rN=document.getElementById("railNum"); if(rN) rN.textContent=(current+1);
+  var rS=document.getElementById("railStatus");
+  if(rS){ rS.className="railitem-status";
+    if(SEEN[cid]){ var scr2=document.getElementById("screen-"+cid); var ok2=SEL[cid]===parseInt(scr2.getAttribute("data-correct"),10);
+      rS.textContent=ok2?"Correct":"Incorrect"; rS.classList.add(ok2?"correct":"incorrect"); }
+    else if(MARKS[cid]){ rS.textContent="Marked"; rS.classList.add("marked"); }
+    else { rS.textContent="Unanswered"; } }
+  buildNav(); updateProgress();
+  var sel=document.getElementById("jumpSel"); if(sel) sel.value=current; window.scrollTo(0,0);
+}
+function buildNav(){
+  var g=document.getElementById("navGrid"); if(!g) return; g.innerHTML="";
+  SCREENS.forEach(function(s,idx){
+    var cid=IDS[idx],cls="qcell"; if(idx===current) cls+=" cur"; if(SEEN[cid]) cls+=" seen";
+    var flag=MARKS[cid]?'<span class="flag">🚩</span>':'';
+    var cell=document.createElement("div"); cell.className=cls; cell.innerHTML=(idx+1)+flag;
+    cell.addEventListener("click", function(){ qShow(idx); }); g.appendChild(cell);
+  });
+  var sel=document.getElementById("jumpSel");
+  if(sel && sel.options.length!==SCREENS.length){
+    sel.innerHTML=SCREENS.map(function(s,idx){
+      // data-fc-front holds the encounter THEME, which per §A never reveals the diagnosis,
+      // so it is safe to show here as a navigation hint.
+      var theme=(s.getAttribute("data-fc-front")||"").trim();
+      var label=theme?(" — "+theme.slice(0,60)):"";
+      return '<option value="'+idx+'">Q'+(idx+1)+label+'</option>'; }).join("");
+  }
+}
+function updateProgress(){
+  var done=Object.keys(SEEN).length, marked=Object.keys(MARKS).length, corr=0;
+  Object.keys(SEEN).forEach(function(cid){
+    var sc=document.getElementById("screen-"+cid);
+    if(sc && SEL[cid]===parseInt(sc.getAttribute("data-correct"),10)) corr++;
+  });
+  var el=document.getElementById("progress");
+  if(el) el.innerHTML="Question <b>"+(current+1)+"</b> of <b>"+SCREENS.length+"</b>"
+    +" &nbsp;·&nbsp; Answered <b>"+done+"</b>"
+    +" &nbsp;·&nbsp; Correct <b style=\"color:var(--green)\">"+corr+"</b>"
+    +" &nbsp;·&nbsp; Marked <b>"+marked+"</b>"
+    +(done?(" &nbsp;·&nbsp; Score <b>"+Math.round(corr/done*100)+"%</b>"):"");
+  var isc=document.getElementById("itemScore");
+  if(isc) isc.textContent=done?("Score "+Math.round(corr/done*100)+"%  ("+corr+"/"+done+")"):"";
+}
+function wireQbankNav(){
+  var prev=document.getElementById("prevBtn"),next=document.getElementById("nextBtn");
+  if(prev) prev.addEventListener("click", function(){ qShow(current-1); });
+  if(next) next.addEventListener("click", function(){ qShow(current+1); });
+  var sel=document.getElementById("jumpSel"); if(sel) sel.addEventListener("change", function(){ qShow(parseInt(this.value,10)); });
+  document.addEventListener("keydown", function(e){ if(document.querySelector(".modal.show")) return;
+    if(e.key==="ArrowLeft") qShow(current-1); if(e.key==="ArrowRight") qShow(current+1); });
+  var markBtn=document.getElementById("markBtn");
+  if(markBtn) markBtn.addEventListener("click", function(){ var cid=IDS[current]; MARKS[cid]=!MARKS[cid]; if(!MARKS[cid]) delete MARKS[cid];
+    this.classList.toggle("on",!!MARKS[cid]); buildNav(); updateProgress(); });
+  // per-question Reset buttons (below the options)
+  document.querySelectorAll(".qreset-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){ resetQuestion(this.getAttribute("data-cid")); });
+  });
+  // top-bar Whiteboard button opens the pop-up for the current question
+  var wbBtn=document.getElementById("wbBtn");
+  if(wbBtn) wbBtn.addEventListener("click", function(){ openWhiteboard(IDS[current]); });
+}
+function resetQuestion(cid){
+  var ans=document.getElementById(cid); if(ans) ans.style.display="none";
+  var opts=document.getElementById("opts-"+cid); if(opts) opts.querySelectorAll(".opt").forEach(function(o){ o.classList.remove("sel","correct","wrong","locked"); });
+  var sb=document.getElementById("submit-"+cid); if(sb) sb.disabled=true;
+  delete SEL[cid]; delete SEEN[cid];
+  var scr=document.getElementById("screen-"+cid);
+  if(scr) scr.querySelectorAll("mark.uhl").forEach(function(m){ var p=m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild,m); p.removeChild(m); p.normalize(); });
+  buildNav(); updateProgress();
+}
+
+/* ===== HIGHLIGHTER — multi-color, eraser, clear (desktop drag + touch button) ===== */
+var hlOn=false, hlCur="#fff27a", hlErase=false, hlLastRange=null;
+function wireHighlighter(){
+  var btn=document.getElementById("hlBtn");
+  if(btn) btn.addEventListener("click", function(){ hlOn=!hlOn; this.classList.toggle("on",hlOn);
+    document.getElementById("hlbar").classList.toggle("show",hlOn); document.getElementById("hlhint").classList.toggle("show",hlOn);
+    document.body.classList.toggle("hl-active",hlOn); if(!hlOn){ hlErase=false; document.getElementById("hlEraseBtn").classList.remove("on"); } });
+  document.querySelectorAll(".hlswatch").forEach(function(sw){ sw.addEventListener("click", function(){
+    hlCur=this.getAttribute("data-color"); document.documentElement.style.setProperty("--hlcur",hlCur);
+    hlErase=false; document.getElementById("hlEraseBtn").classList.remove("on");
+    document.querySelectorAll(".hlswatch").forEach(function(s){ s.classList.remove("on"); }); this.classList.add("on"); }); });
+  var goBtn=document.getElementById("hlGoBtn");
+  if(goBtn){ goBtn.addEventListener("mousedown",function(e){ e.preventDefault(); }); goBtn.addEventListener("touchstart",function(e){ e.preventDefault(); },{passive:false}); goBtn.addEventListener("click",function(){ hlApply(); }); }
+  var erBtn=document.getElementById("hlEraseBtn"); if(erBtn) erBtn.addEventListener("click", function(){ hlErase=!hlErase; this.classList.toggle("on",hlErase); });
+  var clr=document.getElementById("hlClearBtn"); if(clr) clr.addEventListener("click", function(){
+    SCREENS[current].querySelectorAll("mark.uhl").forEach(function(m){ var p=m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild,m); p.removeChild(m); p.normalize(); }); });
+  document.addEventListener("selectionchange", function(){ if(!hlOn) return; var sel=window.getSelection();
+    if(sel && sel.rangeCount && !sel.isCollapsed){ var r=sel.getRangeAt(0); if(SCREENS[current].contains(r.commonAncestorContainer)) hlLastRange=r.cloneRange(); } });
+  document.addEventListener("mouseup", function(e){ if(!hlOn) return;
+    if(e.target.closest && (e.target.closest(".hlbar")||e.target.closest(".topbar"))) return;
+    if(hlErase){ var m=e.target.closest&&e.target.closest("mark.uhl"); if(m){ var p=m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild,m); p.removeChild(m); p.normalize(); } return; }
+    hlApply(); });
+  document.addEventListener("touchend", function(e){ if(!hlOn||!hlErase) return; var t=e.changedTouches&&e.changedTouches[0]; if(!t) return;
+    var el=document.elementFromPoint(t.clientX,t.clientY); var m=el&&el.closest&&el.closest("mark.uhl");
+    if(m){ var p=m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild,m); p.removeChild(m); p.normalize(); } },{passive:true});
+}
+function hlApply(){
+  var sel=window.getSelection(),range=null;
+  if(sel && sel.rangeCount && !sel.isCollapsed){ var r=sel.getRangeAt(0); if(SCREENS[current].contains(r.commonAncestorContainer)) range=r.cloneRange(); }
+  if(!range && hlLastRange) range=hlLastRange; if(!range) return;
+  var scr=SCREENS[current]; var walker=document.createTreeWalker(scr,NodeFilter.SHOW_TEXT,null),nodes=[],n;
+  while(n=walker.nextNode()){ if(range.intersectsNode(n) && n.nodeValue.replace(/\s/g,"").length && !(n.parentNode.closest&&n.parentNode.closest("mark.uhl"))) nodes.push(n); }
+  nodes.forEach(function(node){ var start=0,end=node.nodeValue.length;
+    if(node===range.startContainer) start=range.startOffset; if(node===range.endContainer) end=range.endOffset; if(end<=start) return;
+    var rr=document.createRange(); rr.setStart(node,start); rr.setEnd(node,end);
+    var m=document.createElement("mark"); m.className="uhl"; m.style.background=hlCur;
+    try{ m.appendChild(rr.extractContents()); rr.insertNode(m); }catch(err){} });
+  if(sel) sel.removeAllRanges(); hlLastRange=null;
+}
+
+/* ===== FLASHCARDS (built-in deck + build-your-own custom cards) ===== */
+var FC=[], fcIdx=0;
+function rebuildFC(){
+  var built=SCREENS.map(function(s,idx){
+    return { front:s.getAttribute("data-fc-front")||("Question "+(idx+1)),
+             back: s.getAttribute("data-fc-back")||"", custom:false, qidx:idx };
+  });
+  var custom=STATE.customCards.map(function(c){ return { front:c.front, back:c.back, custom:true }; });
+  FC=built.concat(custom);
+}
+function fcShow(){
+  if(!FC.length) return;
+  if(fcIdx>=FC.length) fcIdx=0;
+  var c=FC[fcIdx];
+  document.getElementById("fcCard").classList.remove("flip");
+  document.getElementById("fcFront").innerHTML = c.front + (c.custom?'<span class="fc-custom-badge">my card</span>':'');
+  document.getElementById("fcBack").textContent=c.back;
+  document.getElementById("fcMeta").textContent="Card "+(fcIdx+1)+" of "+FC.length+(c.custom?" · your card":"")+" · tap card to flip";
+  document.getElementById("fcDelete").style.display = c.custom?"inline-block":"none";
+}
+function wireFlashcards(){
+  rebuildFC();
+  document.getElementById("fcBtn").addEventListener("click", function(){ fcIdx=current<FC.length?current:0; document.getElementById("fcModal").classList.add("show"); fcShow(); });
+  document.getElementById("fcClose").addEventListener("click", function(){ document.getElementById("fcModal").classList.remove("show"); });
+  document.getElementById("fcCard").addEventListener("click", function(){ this.classList.toggle("flip"); });
+  document.getElementById("fcFlip").addEventListener("click", function(){ document.getElementById("fcCard").classList.toggle("flip"); });
+  document.getElementById("fcNext").addEventListener("click", function(){ fcIdx=(fcIdx+1)%FC.length; fcShow(); });
+  document.getElementById("fcPrev").addEventListener("click", function(){ fcIdx=(fcIdx-1+FC.length)%FC.length; fcShow(); });
+  document.getElementById("fcModal").addEventListener("click", function(e){ if(e.target===this) this.classList.remove("show"); });
+
+  // build-your-own
+  document.getElementById("fcNewToggle").addEventListener("click", function(){ document.getElementById("fcEditor").classList.toggle("show"); });
+  document.getElementById("fcSave").addEventListener("click", function(){
+    var f=document.getElementById("fcNewFront").value.trim(), b=document.getElementById("fcNewBack").value.trim();
+    if(!f||!b){ alert("Enter both a front and a back."); return; }
+    STATE.customCards.push({front:f,back:b}); persistCards(); rebuildFC();
+    document.getElementById("fcNewFront").value=""; document.getElementById("fcNewBack").value="";
+    document.getElementById("fcEditor").classList.remove("show");
+    fcIdx=FC.length-1; fcShow();
+  });
+  // make a card from the current question (one tap)
+  document.getElementById("fcFromQ").addEventListener("click", function(){
+    var s=SCREENS[current];
+    var front=(s.querySelector(".question")||{}).textContent||s.getAttribute("data-fc-front")||"Question";
+    var correct=parseInt(s.getAttribute("data-correct"),10);
+    var optEls=document.getElementById("opts-"+IDS[current]).querySelectorAll(".opt");
+    var ansTxt=optEls[correct]?optEls[correct].lastElementChild.textContent:"";
+    var pearl=(s.querySelector(".pearl")||{}).textContent||"";
+    STATE.customCards.push({front:front.replace(/^❓\s*/,""), back:(ansTxt?("Answer: "+ansTxt+"\n\n"):"")+pearl});
+    persistCards(); rebuildFC(); document.getElementById("fcModal").classList.add("show"); fcIdx=FC.length-1; fcShow();
+  });
+  document.getElementById("fcDelete").addEventListener("click", function(){
+    var c=FC[fcIdx]; if(!c||!c.custom) return;
+    // find matching custom card and remove
+    var ci=STATE.customCards.findIndex(function(x){ return x.front===c.front && x.back===c.back; });
+    if(ci>-1){ STATE.customCards.splice(ci,1); persistCards(); rebuildFC(); if(fcIdx>=FC.length) fcIdx=FC.length-1; fcShow(); }
+  });
+}
+
+/* ===== WHITEBOARD (single shared pop-up modal; per-question save by cid) ===== */
+var WB_SIZES={S:2.5,M:6,L:13};
+var wbState={ cid:null, tool:"pen", color:"#1e293b", size:WB_SIZES.S, drawing:false, lastX:0, lastY:0, undo:[], sized:false, zoom:1 };
+var WB_ZMIN=1, WB_ZMAX=4, WB_ZSTEP=0.25;
+function wbCtx(){ return document.getElementById("wbCanvas").getContext("2d"); }
+function wbApplyZoom(){
+  var cv=document.getElementById("wbCanvas"); if(!cv) return;
+  cv.style.transformOrigin="0 0";
+  cv.style.transform="scale("+wbState.zoom+")";
+  var lbl=document.getElementById("wbZoomLabel"); if(lbl) lbl.textContent=Math.round(wbState.zoom*100)+"%";
+  var out=document.getElementById("wbZoomOut"), inb=document.getElementById("wbZoomIn");
+  if(out) out.disabled=(wbState.zoom<=WB_ZMIN+1e-9);
+  if(inb) inb.disabled=(wbState.zoom>=WB_ZMAX-1e-9);
+}
+function wbSetZoom(z){ wbState.zoom=Math.max(WB_ZMIN,Math.min(WB_ZMAX,Math.round(z/WB_ZSTEP)*WB_ZSTEP)); wbApplyZoom(); }
+function wbSizeCanvas(){
+  var cv=document.getElementById("wbCanvas");
+  var dpr=window.devicePixelRatio||1, cssW=cv.offsetWidth||600;
+  cv.width=cssW*dpr; cv.height=340*dpr; cv.getContext("2d").setTransform(dpr,0,0,dpr,0,0);
+  wbState.sized=true;
+}
+function wbLoad(cid){
+  var cv=document.getElementById("wbCanvas"), ctx=cv.getContext("2d");
+  ctx.clearRect(0,0,cv.width,cv.height); wbState.undo=[];
+  var saved=STATE.whiteboards[cid];
+  if(saved){ var img=new Image(); img.onload=function(){ ctx.drawImage(img,0,0,cv.offsetWidth||600,340); }; img.src=saved; }
+}
+function wbSnapshot(){
+  var cv=document.getElementById("wbCanvas"); if(!wbState.cid) return;
+  try{ STATE.whiteboards[wbState.cid]=cv.toDataURL(); persistWB(); }catch(e){}
+}
+function openWhiteboard(cid){
+  wbState.cid=cid; wbState.zoom=1;
+  var which=document.getElementById("wbWhich"); if(which) which.textContent="· Question "+(IDS.indexOf(cid)+1);
+  document.getElementById("wbModal").classList.add("show");
+  // size after the modal is visible so the canvas has a width
+  setTimeout(function(){ wbSizeCanvas(); wbLoad(cid); wbApplyZoom(); }, 30);
+}
+function wireWhiteboardModal(){
+  var modal=document.getElementById("wbModal"); if(!modal) return;
+  var cv=document.getElementById("wbCanvas");
+  document.getElementById("wbClose").addEventListener("click", function(){ wbSnapshot(); modal.classList.remove("show"); });
+  modal.addEventListener("click", function(e){ if(e.target===modal){ wbSnapshot(); modal.classList.remove("show"); } });
+  modal.querySelectorAll(".wb-btn[data-tool]").forEach(function(b){ b.addEventListener("click", function(){
+    wbState.tool=this.getAttribute("data-tool");
+    modal.querySelectorAll(".wb-btn[data-tool]").forEach(function(x){ x.classList.remove("active"); }); this.classList.add("active"); }); });
+  modal.querySelectorAll(".wb-color").forEach(function(sw){ sw.addEventListener("click", function(){
+    wbState.color=this.getAttribute("data-color"); wbState.tool="pen";
+    modal.querySelectorAll(".wb-btn[data-tool]").forEach(function(x){ x.classList.toggle("active",x.getAttribute("data-tool")==="pen"); });
+    modal.querySelectorAll(".wb-color").forEach(function(s){ s.classList.remove("active"); }); this.classList.add("active"); }); });
+  modal.querySelectorAll(".wb-sz").forEach(function(b){ b.addEventListener("click", function(){
+    wbState.size=WB_SIZES[this.getAttribute("data-size")];
+    modal.querySelectorAll(".wb-sz").forEach(function(x){ x.classList.remove("active"); }); this.classList.add("active"); }); });
+  modal.querySelectorAll(".wb-btn[data-action]").forEach(function(b){ b.addEventListener("click", function(){
+    var ctx=wbCtx(), cvv=document.getElementById("wbCanvas");
+    if(this.getAttribute("data-action")==="undo"){ if(wbState.undo.length){ ctx.putImageData(wbState.undo.pop(),0,0); wbSnapshot(); } }
+    else { ctx.clearRect(0,0,cvv.width,cvv.height); wbState.undo=[]; if(wbState.cid){ delete STATE.whiteboards[wbState.cid]; persistWB(); } } }); });
+  function pos(e){ var r=cv.getBoundingClientRect(), pt=e.touches?e.touches[0]:e; return {x:(pt.clientX-r.left)/wbState.zoom,y:(pt.clientY-r.top)/wbState.zoom}; }
+  function pushUndo(){ try{ wbState.undo.push(wbCtx().getImageData(0,0,cv.width,cv.height)); if(wbState.undo.length>25) wbState.undo.shift(); }catch(e){} }
+  function start(e){ pushUndo(); var p=pos(e); wbState.drawing=true; wbState.lastX=p.x; wbState.lastY=p.y; }
+  function move(e){ if(!wbState.drawing) return; var p=pos(e),ctx=wbCtx(); ctx.beginPath(); ctx.moveTo(wbState.lastX,wbState.lastY); ctx.lineTo(p.x,p.y);
+    ctx.strokeStyle=wbState.tool==="eraser"?"#ffffff":wbState.color; ctx.lineWidth=wbState.tool==="eraser"?wbState.size*5:wbState.size; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.stroke(); wbState.lastX=p.x; wbState.lastY=p.y; }
+  function end(){ if(wbState.drawing){ wbState.drawing=false; wbSnapshot(); } }
+  cv.addEventListener("mousedown", start); cv.addEventListener("mousemove", move); cv.addEventListener("mouseup", end); cv.addEventListener("mouseleave", end);
+  cv.addEventListener("touchstart", function(e){ e.preventDefault(); start(e); },{passive:false});
+  cv.addEventListener("touchmove", function(e){ e.preventDefault(); move(e); },{passive:false});
+  cv.addEventListener("touchend", function(e){ e.preventDefault(); end(e); },{passive:false});
+  var zin=document.getElementById("wbZoomIn"), zout=document.getElementById("wbZoomOut"), zrst=document.getElementById("wbZoomReset");
+  if(zin) zin.addEventListener("click", function(){ wbSetZoom(wbState.zoom+WB_ZSTEP); });
+  if(zout) zout.addEventListener("click", function(){ wbSetZoom(wbState.zoom-WB_ZSTEP); });
+  if(zrst) zrst.addEventListener("click", function(){ wbSetZoom(1); });
+}
+
+})();
+/* ===================== FONT SIZE SCALER ===================== */
+(function(){
+  var LEVELS=["fz-1","fz0","fz1","fz2","fz3"];
+  var idx=1; // default fz0 (15px)
+  function apply(){
+    var body=document.body;
+    LEVELS.forEach(function(c){ body.classList.remove(c); });
+    body.classList.add(LEVELS[idx]);
+    var down=document.getElementById("fzDown"), up=document.getElementById("fzUp");
+    if(down) down.disabled=(idx===0);
+    if(up) up.disabled=(idx===LEVELS.length-1);
+  }
+  function wireFontScaler(){
+    var down=document.getElementById("fzDown"), up=document.getElementById("fzUp");
+    if(down) down.addEventListener("click", function(){ if(idx>0){ idx--; apply(); } });
+    if(up) up.addEventListener("click", function(){ if(idx<LEVELS.length-1){ idx++; apply(); } });
+    apply();
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", wireFontScaler);
+  else wireFontScaler();
+})();
+
+</script>
+</body>
+</html>
